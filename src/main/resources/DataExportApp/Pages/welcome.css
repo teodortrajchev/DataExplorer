@@ -1,0 +1,32 @@
+.welcome-center {
+    -fx-background-color: linear-gradient(to bottom right, #1f2937, #111827);
+}
+
+.welcome-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.welcome-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #9ca3af;
+}
+
+.primary-button {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 32 12 32;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: #2563eb;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #1d4ed8;
+}
