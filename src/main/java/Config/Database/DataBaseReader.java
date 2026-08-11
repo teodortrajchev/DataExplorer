@@ -46,6 +46,54 @@ public class DataBaseReader {
         }
     }
 
+    public List<String> listTables(String schemaOwner) throws SQLException {
+        List<String> tables = new ArrayList<>();
+        String sql = "SELECT table_name FROM all_tables WHERE owner = ? ORDER BY table_name";
+
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, schemaOwner.toUpperCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    tables.add(rs.getString("table_name"));
+                }
+            }
+        }
+        return tables;
+    }
+    public List<String> listProcedures(String schemaOwner) throws SQLException {
+        List<String> tables = new ArrayList<>();
+        String sql = """
+        SELECT object_name
+        FROM all_objects
+        WHERE owner = ?
+          AND object_type = 'PROCEDURE'
+        ORDER BY object_name
+        """;
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, schemaOwner.toUpperCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    tables.add(rs.getString("object_name"));
+                }
+            }
+        }
+        return tables;
+    }
+
+    public DataTable loadTable(String schemaOwner, String tableName) throws SQLException {
+        DataTable table = runQuery("SELECT * FROM " + schemaOwner + "." + tableName);
+        table.setTitle(tableName);
+        return table;
+    }
+    public DataTable loadProcedure(String schemaOwner, String procedureName) throws SQLException {
+        DataTable table = runQuery("CALL " + schemaOwner + "." + procedureName + "(?)");
+        table.setTitle(procedureName);
+        return table;
+    }
+
+
     private DataTable runSelect(Connection conn, String sql) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -53,11 +101,6 @@ public class DataBaseReader {
         }
     }
 
-    /**
-     * Calls a stored procedure whose single parameter is an OUT REF CURSOR,
-     * e.g. Oracle proc: PROCEDURE get_all_emps(p_cursor OUT SYS_REFCURSOR)
-     * Called as: CALL SRB.GET_ALL_EMPS(?)
-     */
     private DataTable runProcedureWithRefCursor(Connection conn, String sql) throws SQLException {
         // Normalize "CALL X(?)" into JDBC escape syntax "{call X(?)}" if not already wrapped
         String callSql = sql.startsWith("{") ? sql : "{" + sql + "}";

@@ -12,6 +12,9 @@
     -fx-font-size: 14px;
     -fx-text-fill: #9ca3af;
 }
+Label{
+    -fx-text-fill: white;
+}
 
 .primary-button {
     -fx-background-color: #3b82f6;

@@ -100,7 +100,7 @@ public class LoginView {
             case SUCCESS -> {
                 messageLabel.setTextFill(Color.GREEN);
                 messageLabel.setText("Login Successful");
-                new WelcomePage(userId).show(new Stage());
+                new ConnectionPage(userId).show(new Stage());
                 stage.close();
             }
             case WRONG_PASSWORD -> {

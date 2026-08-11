@@ -25,6 +25,15 @@ public class DataExporterPage {
         navbar.setAlignment(Pos.CENTER_LEFT);
         navbar.setStyle("-fx-background-color: #2b2b2b;");
 
+        Button closeBtn = new Button("Close");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-cursor: hand;");
+        closeBtn.setOnAction(e -> stage.close());
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        navbar.getChildren().addAll(spacer, closeBtn);
+
 
 
         Button homeBtn = new Button("Home");
@@ -37,7 +46,6 @@ public class DataExporterPage {
         exporterbtn.setOnAction(e ->
         {new DataExporterPage().show(new Stage());});
 
-        Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         navbar.getChildren().addAll(spacer, homeBtn, exporterbtn, logoutBtn);
