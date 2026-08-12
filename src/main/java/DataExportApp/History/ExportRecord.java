@@ -11,18 +11,20 @@ public class ExportRecord {
     private String sortColumn;
     private Boolean sortAscending;
     private String outputPath;
+    private String filePath;
     private int rowCount;
 
     public ExportRecord() {
     }
 
-    public ExportRecord(String timestamp, String tableName, boolean isProcedure, String format,
+    public ExportRecord(String timestamp, String tableName, boolean isProcedure, String filePath, String format,
                         String filterColumn, String filterValue,
                         String sortColumn, Boolean sortAscending,
                         String outputPath, int rowCount) {
         this.timestamp = timestamp;
         this.tableName = tableName;
         this.isProcedure = isProcedure;
+        this.filePath = filePath;
         this.format = format;
         this.filterColumn = filterColumn;
         this.filterValue = filterValue;
@@ -31,7 +33,8 @@ public class ExportRecord {
         this.outputPath = outputPath;
         this.rowCount = rowCount;
     }
-
+    public String getFilePath() { return filePath; }
+    public void setFilePath(String filePath) { this.filePath = filePath; }
     public String getTimestamp() { return timestamp; }
     public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
 

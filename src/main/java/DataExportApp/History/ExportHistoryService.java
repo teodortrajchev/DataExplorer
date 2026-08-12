@@ -50,4 +50,11 @@ public class ExportHistoryService {
             return new ArrayList<>();
         }
     }
+    public static void clear() {
+        try {
+            Files.deleteIfExists(HISTORY_FILE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

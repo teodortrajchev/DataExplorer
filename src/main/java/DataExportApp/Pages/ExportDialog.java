@@ -34,13 +34,15 @@ public class ExportDialog {
     private final Label statusLabel = new Label();
     private File selectedFile;
     private Stage stage;
+    private String filePath;
 
-    public ExportDialog(DataTable dataTable, String tableName, boolean isProcedure,
+    public ExportDialog(DataTable dataTable, String tableName, boolean isProcedure, String filePath,
                         String filterColumn, String filterValue,
                         String sortColumn, Boolean sortAscending) {
         this.dataTable = dataTable;
         this.tableName = tableName;
         this.isProcedure = isProcedure;
+        this.filePath = filePath;
         this.filterColumn = filterColumn;
         this.filterValue = filterValue;
         this.sortColumn = sortColumn;
@@ -131,6 +133,7 @@ public class ExportDialog {
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 tableName,
                 isProcedure,
+                filePath,
                 formatBox.getValue().toString(),
                 filterColumn,
                 filterValue,

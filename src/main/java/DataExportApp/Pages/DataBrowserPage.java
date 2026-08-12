@@ -1,9 +1,18 @@
 package DataExportApp.Pages;
-
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.image.WritableImage;
+import javax.imageio.ImageIO;
 import Config.Database.DataBaseReader;
 import Config.Database.DataTable;
+import Config.Database.ProcedureParameter;
 import DataExportApp.Auth.AuthService;
+import DataExportApp.Import.DataImportService;
+import java.io.File;
+import java.io.IOException;
 
+import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import DataExportApp.Charts.ChartBuilder;
 import DataExportApp.History.ExportRecord;
 import javafx.beans.property.SimpleObjectProperty;
@@ -22,6 +31,7 @@ import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 public class DataBrowserPage {
@@ -47,7 +57,7 @@ public class DataBrowserPage {
     private final Map<String, CheckBox> columnCheckBoxes = new LinkedHashMap<>();
     private final Label statusLabel = new Label();
     private final BorderPane chartArea = new BorderPane();
-
+    private String currentImportedFilePath;
     private DataTable originalTable;
     private DataTable currentTable;
     private boolean currentIsProcedure;
@@ -82,7 +92,7 @@ public class DataBrowserPage {
         procedureList.setOnMouseClicked(e -> {
             String selected = procedureList.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                loadProcedure(selected, null);
+                promptAndLoadProcedure(selected, null);
             }
         });
 
@@ -181,10 +191,6 @@ public class DataBrowserPage {
 
         String navBtnStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;";
 
-        Button advancedBtn = new Button("Advanced query");
-        advancedBtn.setStyle(navBtnStyle);
-        advancedBtn.setOnAction(e -> new DataExporterPage().show(new Stage()));
-
         Button historyBtn = new Button("History");
         historyBtn.setStyle(navBtnStyle);
         historyBtn.setOnAction(e -> new ExportHistoryPage(this).show(new Stage()));
@@ -193,6 +199,10 @@ public class DataBrowserPage {
         exportBtn.setStyle(navBtnStyle);
         exportBtn.setOnAction(e -> openExportDialog());
 
+        Button importBtn = new Button("Import file");
+        importBtn.setStyle(navBtnStyle);
+        importBtn.setOnAction(e -> chooseAndImportFile());
+
         Button logoutBtn = new Button("Logout");
         logoutBtn.setStyle(navBtnStyle);
         logoutBtn.setOnAction(e -> {
@@ -200,7 +210,7 @@ public class DataBrowserPage {
             stage.close();
         });
 
-        navbar.getChildren().addAll(navLabel, spacer, advancedBtn, historyBtn, exportBtn, logoutBtn);
+        navbar.getChildren().addAll(navLabel, spacer, historyBtn,importBtn, exportBtn, logoutBtn);
         return navbar;
     }
 
@@ -219,13 +229,18 @@ public class DataBrowserPage {
         Button showChartBtn = new Button("Show chart");
         showChartBtn.getStyleClass().add("primary-button");
         showChartBtn.setOnAction(e -> renderChart());
+        chartTypeBox.getSelectionModel().selectFirst();
+
+
+        Button saveChartBtn = new Button("Save chart as image");
+        saveChartBtn.setOnAction(e -> saveChartAsImage());
 
         VBox panel = new VBox(10,
                 new Label("Filter"), filterColumnBox, filterValueField, new HBox(8, applyFilterBtn, clearFilterBtn),
                 new Separator(),
                 new Label("Sort"), sortColumnBox, sortDirectionBox, applySortBtn,
                 new Separator(),
-                new Label("Chart"), chartTypeBox, chartCategoryBox, chartValueBox, showChartBtn,
+                new Label("Chart"), chartTypeBox, chartCategoryBox, chartValueBox, showChartBtn, saveChartBtn,
                 new Separator(),
                 statusLabel
         );
@@ -269,6 +284,7 @@ public class DataBrowserPage {
             originalTable = task.getValue();
             currentTable = originalTable;
             currentIsProcedure = false;
+            currentImportedFilePath = null;
             populateColumnPickers();
 
             if (historyRecord != null) {
@@ -283,7 +299,7 @@ public class DataBrowserPage {
             // ORA-04044: not a table — likely a procedure, especially for older
             // history entries saved before isProcedure was tracked. Retry as a procedure.
             if (message != null && message.contains("ORA-04044")) {
-                loadProcedure(tableName, historyRecord);
+                loadProcedure(tableName, Map.of(), historyRecord);
             } else {
                 statusLabel.setText("Failed to load table: " + message);
             }
@@ -320,27 +336,63 @@ public class DataBrowserPage {
         stage.toFront();
         stage.requestFocus();
 
-        if (record.isProcedure()) {
+        if (record.getFilePath() != null) {
+            File file = new File(record.getFilePath());
+            if (!file.exists()) {
+                statusLabel.setText("Original file no longer exists: " + record.getFilePath());
+                return;
+            }
+            loadFile(file, record);
+        } else if (record.isProcedure()) {
             procedureList.getSelectionModel().select(record.getTableName());
-            loadProcedure(record.getTableName(), record);
+            loadProcedure(record.getTableName(), Map.of(), record);
         } else {
             tableList.getSelectionModel().select(record.getTableName());
             loadTable(record.getTableName(), record);
         }
     }
 
-    private void loadProcedure(String procedureName, ExportRecord historyRecord) {
+    private void promptAndLoadProcedure(String procedureName, ExportRecord historyRecord) {
+        statusLabel.setText("Checking parameters for " + procedureName + "...");
+        Task<List<ProcedureParameter>> paramsTask = new Task<>() {
+            @Override
+            protected List<ProcedureParameter> call() throws SQLException {
+                return reader.getProcedureParameters(schema, procedureName);
+            }
+        };
+        paramsTask.setOnSucceeded(e -> {
+            List<ProcedureParameter> inputParams = paramsTask.getValue().stream()
+                    .filter(ProcedureParameter::isInput)
+                    .toList();
+
+            if (inputParams.isEmpty()) {
+                loadProcedure(procedureName, Map.of(), historyRecord);
+            } else {
+                Optional<Map<String, String>> values = ProceduresParamsDialog.show(stage, procedureName, inputParams);
+                if (values.isPresent()) {
+                    loadProcedure(procedureName, values.get(), historyRecord);
+                } else {
+                    statusLabel.setText("Cancelled.");
+                }
+            }
+        });
+        paramsTask.setOnFailed(e -> statusLabel.setText("Failed to check parameters: " + paramsTask.getException().getMessage()));
+        new Thread(paramsTask).start();
+    }
+
+    private void loadProcedure(String procedureName, Map<String, String> paramValues, ExportRecord historyRecord) {
         statusLabel.setText("Loading " + procedureName + "...");
         Task<DataTable> task = new Task<>() {
             @Override
             protected DataTable call() throws SQLException {
-                return reader.loadProcedure(schema, procedureName);
+                return reader.loadProcedure(schema, procedureName, paramValues);
             }
         };
         task.setOnSucceeded(e -> {
             originalTable = task.getValue();
             currentTable = originalTable;
             currentIsProcedure = true;
+            currentImportedFilePath = null;
             populateColumnPickers();
 
             if (historyRecord != null) {
@@ -442,7 +494,7 @@ public class DataBrowserPage {
         String sortColumn = sortColumnBox.getValue();
         Boolean sortAscending = sortColumn == null ? null : "Ascending".equals(sortDirectionBox.getValue());
 
-        new ExportDialog(currentTable, currentTable.getTitle(), currentIsProcedure,
+        new ExportDialog(currentTable, currentTable.getTitle(), currentIsProcedure, currentImportedFilePath,
                 filterColumn, filterValue, sortColumn, sortAscending)
                 .show(new Stage());
     }
@@ -472,5 +524,81 @@ public class DataBrowserPage {
             rows.add(FXCollections.observableArrayList(row));
         }
         resultsTable.setItems(rows);
+    }
+    private void chooseAndImportFile() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Import data from file");
+        chooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("All supported", "*.csv", "*.xlsx", "*.xls", "*.docx", "*.pdf"),
+                new FileChooser.ExtensionFilter("CSV", "*.csv"),
+                new FileChooser.ExtensionFilter("Excel", "*.xlsx", "*.xls"),
+                new FileChooser.ExtensionFilter("Word", "*.docx"),
+                new FileChooser.ExtensionFilter("PDF", "*.pdf")
+        );
+
+        File file = chooser.showOpenDialog(stage);
+        if (file != null) {
+            loadFile(file, null);
+        }
+    }
+
+    private void loadFile(File file, ExportRecord historyRecord) {
+        statusLabel.setText("Importing " + file.getName() + "...");
+        Task<DataTable> task = new Task<>() {
+            @Override
+            protected DataTable call() throws IOException {
+                return DataImportService.importFile(file);
+            }
+        };
+        task.setOnSucceeded(e -> {
+            originalTable = task.getValue();
+            currentTable = originalTable;
+            currentIsProcedure = false;
+            currentImportedFilePath = file.getAbsolutePath();
+            populateColumnPickers();
+
+            if (historyRecord != null) {
+                reapplyRecord(historyRecord);
+            } else {
+                renderTable(currentTable);
+                statusLabel.setText("Imported " + currentTable.getRowCount() + " rows from " + file.getName() + ".");
+            }
+        });
+        task.setOnFailed(e -> statusLabel.setText("Import failed: " + task.getException().getMessage()));
+        new Thread(task).start();
+    }
+    private void saveChartAsImage() {
+        if (chartArea.getCenter() == null) {
+            statusLabel.setText("Show a chart first.");
+            return;
+        }
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save chart as image");
+        chooser.setInitialFileName(currentTable != null ? currentTable.getTitle() + "_chart.png" : "chart.png");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG image", "*.png"));
+
+        File file = chooser.showSaveDialog(stage);
+        if (file == null) return;
+
+        if (!file.getName().toLowerCase().endsWith(".png")) {
+            file = new File(file.getAbsolutePath() + ".png");
+        }
+
+        // Snapshot with a transparent-safe white background, since charts
+        // otherwise export with a see-through background that looks broken
+        // when opened outside the app.
+        SnapshotParameters params = new SnapshotParameters();
+        params.setFill(Color.WHITE);
+
+        WritableImage snapshot = chartArea.getCenter().snapshot(params, null);
+
+        try {
+            ImageIO.write(SwingFXUtils.fromFXImage(snapshot, null), "png", file);
+            statusLabel.setText("Saved chart: " + file.getName());
+        } catch (IOException ex) {
+            statusLabel.setText("Failed to save chart: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 }

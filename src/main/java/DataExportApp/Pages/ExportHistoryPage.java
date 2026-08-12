@@ -6,25 +6,31 @@ import DataExportApp.History.ExportRecord;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public class ExportHistoryPage {
 
     private final DataBrowserPage originatingBrowser;
+    private TableView<ExportRecord> table;
 
     public ExportHistoryPage(DataBrowserPage originatingBrowser) {
         this.originatingBrowser = originatingBrowser;
     }
 
     public void show(Stage stage) {
-        TableView<ExportRecord> table = new TableView<>();
+        table = new TableView<>();
 
         TableColumn<ExportRecord, String> dateCol = new TableColumn<>("Date");
         dateCol.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
@@ -79,19 +85,46 @@ public class ExportHistoryPage {
 
         table.getColumns().addAll(List.of(dateCol, tableCol, formatCol, filterCol, sortCol, rowsCol, fileCol, actionCol));
 
-        List<ExportRecord> history = ExportHistoryService.loadHistory();
-        table.setItems(FXCollections.observableArrayList(history));
+        refreshTable();
         table.setPlaceholder(new Label("No exports yet."));
 
         Label title = new Label("Export history");
         title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        VBox root = new VBox(12, title, table);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button clearHistoryBtn = new Button("Clear history");
+        clearHistoryBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-cursor: hand;");
+        clearHistoryBtn.setOnAction(e -> confirmAndClearHistory());
+
+        HBox header = new HBox(12, title, spacer, clearHistoryBtn);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        VBox root = new VBox(12, header, table);
         root.setPadding(new Insets(20));
 
         Scene scene = new Scene(root, 900, 500);
         stage.setTitle("Export history");
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void confirmAndClearHistory() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Clear export history");
+        confirm.setHeaderText("Delete all export history?");
+        confirm.setContentText("This can't be undone. Your actual exported files won't be affected — only the history list.");
+
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            ExportHistoryService.clear();
+            refreshTable();
+        }
+    }
+
+    private void refreshTable() {
+        List<ExportRecord> history = ExportHistoryService.loadHistory();
+        table.setItems(FXCollections.observableArrayList(history));
     }
 }
