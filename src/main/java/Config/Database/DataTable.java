@@ -48,7 +48,31 @@ public class DataTable {
         }
         return filtered;
     }
+    public DataTable withoutColumnsContaining(String keyword) {
+        String needle = keyword.toLowerCase();
+        List<String> keptColumns = new ArrayList<>();
+        List<Integer> keptIndices = new ArrayList<>();
 
+        for (int i = 0; i < columnNames.size(); i++) {
+            if (!columnNames.get(i).toLowerCase().contains(needle)) {
+                keptColumns.add(columnNames.get(i));
+                keptIndices.add(i);
+            }
+        }
+
+        DataTable filtered = new DataTable(keptColumns);
+        filtered.setTitle(title);
+
+        for (Object[] row : rows) {
+            Object[] newRow = new Object[keptIndices.size()];
+            for (int i = 0; i < keptIndices.size(); i++) {
+                newRow[i] = row[keptIndices.get(i)];
+            }
+            filtered.addRow(newRow);
+        }
+
+        return filtered;
+    }
     public DataTable sortBy(String columnName, boolean ascending) {
         int colIndex = columnNames.indexOf(columnName);
         if (colIndex == -1) {

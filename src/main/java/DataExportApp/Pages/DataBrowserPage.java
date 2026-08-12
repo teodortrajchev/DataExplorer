@@ -1,4 +1,5 @@
 package DataExportApp.Pages;
+import Config.Database.ForeignKeyInfo;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.WritableImage;
@@ -28,10 +29,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 
 public class DataBrowserPage {
@@ -62,7 +60,9 @@ public class DataBrowserPage {
     private DataTable currentTable;
     private boolean currentIsProcedure;
     private Stage stage;
-
+    private final VBox foreignKeysBox = new VBox(6);
+    private List<ForeignKeyInfo> currentForeignKeys = new ArrayList<>();
+    private String currentTableName;
     private final String schema;
 
     public DataBrowserPage(String username, DataBaseReader reader, String schema) {
@@ -104,6 +104,17 @@ public class DataBrowserPage {
         columnsScroll.setFitToWidth(true);
         columnsScroll.setPrefWidth(220);
         columnsScroll.setPrefHeight(400);
+        ScrollPane fkScroll = new ScrollPane(foreignKeysBox);
+        fkScroll.setFitToWidth(true);
+        fkScroll.setPrefWidth(220);
+        fkScroll.setPrefHeight(120);
+        fkScroll.setMaxHeight(200);
+        foreignKeysBox.setPadding(new Insets(8));
+        foreignKeysBox.setPrefWidth(220);
+
+        VBox foreignKeysPanel = new VBox(8, new Label("Related tables"), fkScroll);
+        foreignKeysPanel.setPadding(new Insets(10));
+        foreignKeysPanel.setPrefWidth(240);
 
         Button selectAllColumns = new Button("Select All");
         selectAllColumns.setOnAction(e -> {
@@ -138,11 +149,7 @@ public class DataBrowserPage {
 
 
 // Tables + Columns
-        HBox leftTopPanel = new HBox(
-                10,
-                tablesPanel,
-                columnsPanel
-        );
+        HBox leftTopPanel = new HBox(10, tablesPanel, columnsPanel, foreignKeysPanel);
 
         VBox leftPanel = new VBox(
                 10,
@@ -273,15 +280,21 @@ public class DataBrowserPage {
     }
 
     private void loadTable(String tableName, ExportRecord historyRecord) {
+        currentTableName = tableName;
+        loadTableData(tableName, List.of(), historyRecord);
+        loadForeignKeysForTable(tableName);
+    }
+
+    private void loadTableData(String tableName, List<ForeignKeyInfo> enabledForeignKeys, ExportRecord historyRecord) {
         statusLabel.setText("Loading " + tableName + "...");
         Task<DataTable> task = new Task<>() {
             @Override
             protected DataTable call() throws SQLException {
-                return reader.loadTable(schema, tableName);
+                return reader.loadTableWithForeignKeys(schema, tableName, enabledForeignKeys);
             }
         };
         task.setOnSucceeded(e -> {
-            originalTable = task.getValue();
+            originalTable = task.getValue().withoutColumnsContaining("password");
             currentTable = originalTable;
             currentIsProcedure = false;
             currentImportedFilePath = null;
@@ -296,8 +309,6 @@ public class DataBrowserPage {
         });
         task.setOnFailed(e -> {
             String message = task.getException().getMessage();
-            // ORA-04044: not a table — likely a procedure, especially for older
-            // history entries saved before isProcedure was tracked. Retry as a procedure.
             if (message != null && message.contains("ORA-04044")) {
                 loadProcedure(tableName, Map.of(), historyRecord);
             } else {
@@ -389,10 +400,12 @@ public class DataBrowserPage {
             }
         };
         task.setOnSucceeded(e -> {
-            originalTable = task.getValue();
+            originalTable = task.getValue().withoutColumnsContaining("password");
             currentTable = originalTable;
             currentIsProcedure = true;
             currentImportedFilePath = null;
+            currentTableName = null;
+            foreignKeysBox.getChildren().setAll(new Label("N/A"));
             populateColumnPickers();
 
             if (historyRecord != null) {
@@ -551,10 +564,12 @@ public class DataBrowserPage {
             }
         };
         task.setOnSucceeded(e -> {
-            originalTable = task.getValue();
+            originalTable = task.getValue().withoutColumnsContaining("password");
             currentTable = originalTable;
             currentIsProcedure = false;
             currentImportedFilePath = file.getAbsolutePath();
+            currentTableName = null;
+            foreignKeysBox.getChildren().setAll(new Label("N/A"));
             populateColumnPickers();
 
             if (historyRecord != null) {
@@ -600,5 +615,42 @@ public class DataBrowserPage {
             statusLabel.setText("Failed to save chart: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+    private void loadForeignKeysForTable(String tableName) {
+        foreignKeysBox.getChildren().clear();
+
+        Task<List<ForeignKeyInfo>> task = new Task<>() {
+            @Override
+            protected List<ForeignKeyInfo> call() throws SQLException {
+                return reader.getForeignKeys(schema, tableName);
+            }
+        };
+        task.setOnSucceeded(e -> {
+            currentForeignKeys = task.getValue();
+            if (currentForeignKeys.isEmpty()) {
+                foreignKeysBox.getChildren().add(new Label("No foreign keys."));
+                return;
+            }
+            for (ForeignKeyInfo fk : currentForeignKeys) {
+                CheckBox checkBox = new CheckBox(fk.describe());
+                checkBox.setSelected(false); // default: don't show related columns
+                checkBox.setOnAction(ev -> onForeignKeySelectionChanged());
+                foreignKeysBox.getChildren().add(checkBox);
+            }
+        });
+        task.setOnFailed(e -> foreignKeysBox.getChildren().setAll(new Label("Failed to load foreign keys.")));
+        new Thread(task).start();
+    }
+
+    private void onForeignKeySelectionChanged() {
+        if (currentTableName == null) return;
+
+        List<ForeignKeyInfo> enabled = new ArrayList<>();
+        for (int i = 0; i < foreignKeysBox.getChildren().size(); i++) {
+            if (foreignKeysBox.getChildren().get(i) instanceof CheckBox checkBox && checkBox.isSelected()) {
+                enabled.add(currentForeignKeys.get(i));
+            }
+        }
+        loadTableData(currentTableName, enabled, null);
     }
 }

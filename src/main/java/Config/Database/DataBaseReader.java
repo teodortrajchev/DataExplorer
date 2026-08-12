@@ -84,8 +84,61 @@ public class DataBaseReader {
         }
         return tables;
     }
+    public List<ForeignKeyInfo> getForeignKeys(String schemaOwner, String tableName) throws SQLException {
+        List<ForeignKeyInfo> foreignKeys = new ArrayList<>();
+        String sql = """
+            SELECT a.constraint_name,
+                   a.column_name AS fk_column,
+                   c_pk.owner AS referenced_owner,
+                   c_pk.table_name AS referenced_table,
+                   b.column_name AS referenced_column
+            FROM all_cons_columns a
+            JOIN all_constraints c
+              ON a.constraint_name = c.constraint_name AND a.owner = c.owner
+            JOIN all_constraints c_pk
+              ON c.r_constraint_name = c_pk.constraint_name AND c.r_owner = c_pk.owner
+            JOIN all_cons_columns b
+              ON c_pk.constraint_name = b.constraint_name AND c_pk.owner = b.owner AND a.position = b.position
+            WHERE c.constraint_type = 'R'
+              AND a.owner = ?
+              AND a.table_name = ?
+            ORDER BY a.constraint_name, a.position
+            """;
 
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, schemaOwner.toUpperCase());
+            stmt.setString(2, tableName.toUpperCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    foreignKeys.add(new ForeignKeyInfo(
+                            rs.getString("constraint_name"),
+                            rs.getString("fk_column"),
+                            rs.getString("referenced_owner"),
+                            rs.getString("referenced_table"),
+                            rs.getString("referenced_column")
+                    ));
+                }
+            }
+        }
+        return foreignKeys;
+    }
+    public List<String> getColumnNames(String schemaOwner, String tableName) throws SQLException {
+        List<String> columns = new ArrayList<>();
+        String sql = "SELECT column_name FROM all_tab_columns WHERE owner = ? AND table_name = ? ORDER BY column_id";
 
+        try (Connection conn = DriverManager.getConnection(jdbcUrl, username, password);
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, schemaOwner.toUpperCase());
+            stmt.setString(2, tableName.toUpperCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    columns.add(rs.getString("column_name"));
+                }
+            }
+        }
+        return columns;
+    }
     public List<ProcedureParameter> getProcedureParameters(String schemaOwner, String procedureName) throws SQLException {
         List<ProcedureParameter> params = new ArrayList<>();
         String sql = """
@@ -121,13 +174,38 @@ public class DataBaseReader {
         return params;
     }
 
-    public DataTable loadTable(String schemaOwner, String tableName) throws SQLException {
-        DataTable table = runQuery("SELECT * FROM " + schemaOwner + "." + tableName);
+    public DataTable loadTableWithForeignKeys(String schemaOwner, String tableName, List<ForeignKeyInfo> enabledForeignKeys) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT t.*");
+        List<String> joinClauses = new ArrayList<>();
+
+        int i = 0;
+        for (ForeignKeyInfo fk : enabledForeignKeys) {
+            String alias = "j" + i;
+            List<String> refColumns = getColumnNames(fk.getReferencedOwner(), fk.getReferencedTable());
+
+            for (String col : refColumns) {
+                sql.append(", ").append(alias).append(".").append(col)
+                        .append(" AS ").append(fk.getReferencedTable()).append(i).append("_").append(col);
+            }
+
+            joinClauses.add("LEFT JOIN " + fk.getReferencedOwner() + "." + fk.getReferencedTable() + " " + alias
+                    + " ON t." + fk.getFkColumn() + " = " + alias + "." + fk.getReferencedColumn());
+            i++;
+        }
+
+        sql.append(" FROM ").append(schemaOwner).append(".").append(tableName).append(" t");
+        for (String join : joinClauses) {
+            sql.append(" ").append(join);
+        }
+
+        DataTable table = runQuery(sql.toString());
         table.setTitle(tableName);
         return table;
     }
 
-    /** Loads a procedure with no parameters (backward-compatible convenience overload). */
+    public DataTable loadTable(String schemaOwner, String tableName) throws SQLException {
+        return loadTableWithForeignKeys(schemaOwner, tableName, List.of());
+    }
     public DataTable loadProcedure(String schemaOwner, String procedureName) throws SQLException {
         return loadProcedure(schemaOwner, procedureName, Map.of());
     }
