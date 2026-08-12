@@ -74,21 +74,26 @@ public class DataBrowserPage {
     public void show(Stage stage) {
         this.stage = stage;
 
-        VBox tablesPanel = new VBox(8, new Label("Tables"), tableList);
+        Label tablesLabel = new Label("Tables");
+        tablesLabel.setMinHeight(25);
+        tablesLabel.setStyle("-fx-text-fill: black;");
+        VBox tablesPanel = new VBox(8, tablesLabel, tableList);
         tablesPanel.setPadding(new Insets(10));
         tablesPanel.setPrefWidth(200);
-
+        VBox.setVgrow(tableList, Priority.ALWAYS);
         tableList.setOnMouseClicked(e -> {
             String selected = tableList.getSelectionModel().getSelectedItem();
             if (selected != null) {
                 loadTable(selected, null);
             }
         });
-
-        VBox proceduresPanel = new VBox(8, new Label("Procedures"), procedureList);
+        Label proceduresLabel = new Label("Procedures");
+        proceduresLabel.setMinHeight(25);
+        proceduresLabel.setStyle("-fx-text-fill: black;");
+        VBox proceduresPanel = new VBox(8, proceduresLabel, procedureList);
         proceduresPanel.setPadding(new Insets(10));
         proceduresPanel.setPrefWidth(200);
-
+        VBox.setVgrow(procedureList, Priority.ALWAYS);
         procedureList.setOnMouseClicked(e -> {
             String selected = procedureList.getSelectionModel().getSelectedItem();
             if (selected != null) {
@@ -97,22 +102,29 @@ public class DataBrowserPage {
         });
 
 // Columns panel
+        Label columnsLabel = new Label("Columns");
+        columnsLabel.setMinHeight(25);
+        columnsLabel.setStyle("-fx-text-fill: black;");
         columnsBox.setPadding(new Insets(10));
         columnsBox.setPrefWidth(220);
 
         ScrollPane columnsScroll = new ScrollPane(columnsBox);
         columnsScroll.setFitToWidth(true);
         columnsScroll.setPrefWidth(220);
-        columnsScroll.setPrefHeight(400);
+        VBox.setVgrow(columnsScroll, Priority.ALWAYS);
         ScrollPane fkScroll = new ScrollPane(foreignKeysBox);
         fkScroll.setFitToWidth(true);
         fkScroll.setPrefWidth(220);
-        fkScroll.setPrefHeight(120);
+        VBox.setVgrow(fkScroll, Priority.ALWAYS);
         fkScroll.setMaxHeight(200);
         foreignKeysBox.setPadding(new Insets(8));
         foreignKeysBox.setPrefWidth(220);
 
-        VBox foreignKeysPanel = new VBox(8, new Label("Related tables"), fkScroll);
+        Label relatedTablesLabel = new Label("Related tables");
+        relatedTablesLabel.setStyle("-fx-text-fill: black;");
+        relatedTablesLabel.setMinHeight(25);
+
+        VBox foreignKeysPanel = new VBox(8,  relatedTablesLabel, fkScroll);
         foreignKeysPanel.setPadding(new Insets(10));
         foreignKeysPanel.setPrefWidth(240);
 
@@ -140,7 +152,7 @@ public class DataBrowserPage {
 
         VBox columnsPanel = new VBox(
                 8,
-                new Label("Columns"),
+                columnsLabel,
                 columnButtons,
                 columnsScroll
         );
@@ -149,19 +161,43 @@ public class DataBrowserPage {
 
 
 // Tables + Columns
-        HBox leftTopPanel = new HBox(10, tablesPanel, columnsPanel, foreignKeysPanel);
+        // LEFT SIDEBAR
+// Tables
+        VBox.setVgrow(tableList, Priority.ALWAYS);
+        tablesPanel.setPrefHeight(250);
 
+// Procedures
+        VBox.setVgrow(procedureList, Priority.ALWAYS);
+        proceduresPanel.setPrefHeight(180);
+
+// Columns
+        VBox.setVgrow(columnsScroll, Priority.ALWAYS);
+        columnsPanel.setPrefHeight(280);
+
+// Related tables
+        VBox.setVgrow(fkScroll, Priority.ALWAYS);
+        foreignKeysPanel.setPrefHeight(220);
+
+// Stack everything vertically
         VBox leftPanel = new VBox(
                 10,
-                leftTopPanel,
-                proceduresPanel
+                tablesPanel,
+                proceduresPanel,
+                columnsPanel,
+                foreignKeysPanel
         );
 
+        leftPanel.setPadding(new Insets(10));
+        leftPanel.setPrefWidth(240);
+        leftPanel.setMinWidth(240);
+
         VBox centerPanel = new VBox(10, resultsTable, chartArea);
-        resultsTable.setPrefHeight(300);
-        chartArea.setPrefHeight(300);
+        resultsTable.setMinHeight(400);
+        chartArea.setMinHeight(350);
         VBox.setVgrow(resultsTable, Priority.ALWAYS);
         VBox.setVgrow(chartArea, Priority.ALWAYS);
+
+        centerPanel.setPadding(new Insets(10));
 
         BorderPane root = new BorderPane();
         root.setTop(buildNavbar());
@@ -178,6 +214,7 @@ public class DataBrowserPage {
 
         stage.setTitle("Data Browser");
         stage.setScene(scene);
+        stage.setMaximized(true);
         stage.show();
 
         loadTableList();

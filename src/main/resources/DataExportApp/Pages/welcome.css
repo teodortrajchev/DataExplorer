@@ -15,7 +15,9 @@
 Label{
     -fx-text-fill: white;
 }
-
+.text-field, .password-field {
+    -fx-prompt-text-fill: #4b5563;
+}
 .primary-button {
     -fx-background-color: #3b82f6;
     -fx-text-fill: white;
