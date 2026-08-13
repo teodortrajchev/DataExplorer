@@ -1,6 +1,7 @@
 package dataexploreapp.controllers;
 
-
+import dataexploreapp.aggregation.AggregationFunction;
+import dataexploreapp.aggregation.Aggregator;
 import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.db_config.database.DataTable;
 import dataexploreapp.db_config.database.ForeignKeyInfo;
@@ -170,7 +171,15 @@ public class DataBrowserController {
                 record.getSortColumn(), record.getSortAscending(),
                 result);
     }
-
+    public DataTable applyAggregation(String groupColumn, String valueColumn, AggregationFunction function) {
+        requireLoadedTable();
+        currentTable = Aggregator.aggregate(currentTable, groupColumn, valueColumn, function);
+        return currentTable;
+    }
+    public DataTable buildAggregatedChartData(String groupColumn, String valueColumn, AggregationFunction function) {
+        requireLoadedTable();
+        return Aggregator.aggregate(currentTable, groupColumn, valueColumn, function);
+    }
     // --- State accessors -------------------------------------------------
 
     public DataTable getCurrentTable() { return currentTable; }

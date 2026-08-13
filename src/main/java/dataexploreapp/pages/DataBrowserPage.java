@@ -1,4 +1,5 @@
 package dataexploreapp.pages;
+import dataexploreapp.aggregation.AggregationFunction;
 import dataexploreapp.controllers.DataBrowserController;
 import dataexploreapp.db_config.database.ForeignKeyInfo;
 import dataexploreapp.dialogs.ExportDialog;
@@ -59,6 +60,13 @@ public class DataBrowserPage {
     private final BorderPane chartArea = new BorderPane();
     private final VBox foreignKeysBox = new VBox(6);
 
+    private final ComboBox<String> aggGroupColumnBox = new ComboBox<>();
+    private final ComboBox<String> aggValueColumnBox = new ComboBox<>();
+    private final ComboBox<AggregationFunction> aggFunctionBox =
+            new ComboBox<>(FXCollections.observableArrayList(AggregationFunction.values()));
+
+    private final ComboBox<String> chartAggFunctionBox =
+            new ComboBox<>(FXCollections.observableArrayList("None", "SUM", "AVG", "COUNT", "MIN", "MAX"));
     private Stage stage;
 
     public DataBrowserPage(String username, DataBaseReader reader, String schema) {
@@ -132,7 +140,7 @@ public class DataBrowserPage {
         fkScroll.setPrefWidth(220);
         fkScroll.setMaxHeight(200);
 
-        VBox.setVgrow(fkScroll, Priority.ALWAYS);
+
 
         foreignKeysBox.setPadding(new Insets(8));
         foreignKeysBox.setPrefWidth(220);
@@ -193,8 +201,6 @@ public class DataBrowserPage {
         columnsPanel.setPrefWidth(240);
         columnsPanel.setPrefHeight(280);
 
-        VBox.setVgrow(columnsScroll, Priority.ALWAYS);
-
 
         // LEFT SIDEBAR
         VBox leftPanel = new VBox(
@@ -209,6 +215,14 @@ public class DataBrowserPage {
         leftPanel.setPrefWidth(240);
         leftPanel.setMinWidth(240);
 
+// Make the entire left sidebar scrollable
+        ScrollPane leftScrollPane = new ScrollPane(leftPanel);
+        leftScrollPane.setFitToWidth(true);
+        leftScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        leftScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        leftScrollPane.setPrefWidth(260);
+        leftScrollPane.setMinWidth(260);
+        leftScrollPane.setMaxWidth(260);
 
         // CENTER PANEL
         VBox centerPanel = new VBox(
@@ -218,20 +232,25 @@ public class DataBrowserPage {
         );
 
         resultsTable.setMinHeight(400);
-        chartArea.setMinHeight(350);
+        chartArea.setMinHeight(600);
+        chartArea.setPrefHeight(600);
+        chartArea.setMaxWidth(Double.MAX_VALUE);
 
-        VBox.setVgrow(resultsTable, Priority.ALWAYS);
-        VBox.setVgrow(chartArea, Priority.ALWAYS);
 
         centerPanel.setPadding(new Insets(10));
-
+        ScrollPane centerScrollPane = new ScrollPane(centerPanel);
+        centerScrollPane.setFitToWidth(true);
+        centerScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        centerScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        centerScrollPane.setMinWidth(260);
+        centerScrollPane.setMaxWidth(Double.MAX_VALUE);
 
         BorderPane root = new BorderPane();
 
         root.setTop(buildNavbar());
-        root.setLeft(leftPanel);
+        root.setLeft(leftScrollPane);
         root.setRight(buildControlsPanel());
-        root.setCenter(centerPanel);
+        root.setCenter(centerScrollPane);
 
         BorderPane.setMargin(centerPanel, new Insets(10));
 
@@ -310,6 +329,15 @@ public class DataBrowserPage {
         Button applySortBtn = new Button("Apply sort");
         applySortBtn.setOnAction(e -> applySort());
 
+        aggFunctionBox.getSelectionModel().select(AggregationFunction.COUNT);
+        Button applyAggBtn = new Button("Apply aggregation");
+        applyAggBtn.setOnAction(e -> applyAggregation());
+
+        // COUNT doesn't need a value column — disable it when COUNT is selected
+        aggFunctionBox.valueProperty().addListener((obs, old, val) ->
+                aggValueColumnBox.setDisable(val != null && !val.requiresValueColumn()));
+        aggValueColumnBox.setDisable(false);
+        chartAggFunctionBox.getSelectionModel().selectFirst();
         chartTypeBox.getSelectionModel().selectFirst();
         Button showChartBtn = new Button("Show chart");
         showChartBtn.getStyleClass().add("primary-button");
@@ -318,12 +346,27 @@ public class DataBrowserPage {
         Button saveChartBtn = new Button("Save chart as image");
         saveChartBtn.setOnAction(e -> saveChartAsImage());
 
+
+        Label filter=new Label("Filter:");
+        filter.setStyle("-fx-text-fill: black;");
+        Label sort=new Label("Sort:");
+        sort.setStyle("-fx-text-fill: black;");
+        Label aggregate=new Label("Aggregate:");
+        aggregate.setStyle("-fx-text-fill: black;");
+        Label chart=new Label("Chart:");
+        chart.setStyle("-fx-text-fill: black;");
+        Label va=new Label("Value / Aggregation:");
+        va.setStyle("-fx-text-fill: black;");
         VBox panel = new VBox(10,
-                new Label("Filter"), filterColumnBox, filterValueField, new HBox(8, applyFilterBtn, clearFilterBtn),
+                filter, filterColumnBox, filterValueField, new HBox(8, applyFilterBtn, clearFilterBtn),
                 new Separator(),
-                new Label("Sort"), sortColumnBox, sortDirectionBox, applySortBtn,
+                sort, sortColumnBox, sortDirectionBox, applySortBtn,
                 new Separator(),
-                new Label("Chart"), chartTypeBox, chartCategoryBox, chartValueBox, showChartBtn, saveChartBtn,
+                aggregate, aggGroupColumnBox, aggValueColumnBox, aggFunctionBox, applyAggBtn,
+                new Separator(),
+                chart, chartTypeBox, chartCategoryBox,
+                va, chartAggFunctionBox, chartValueBox,
+                showChartBtn, saveChartBtn,
                 new Separator(),
                 statusLabel
         );
@@ -580,10 +623,29 @@ public class DataBrowserPage {
         DataTable table = controller.getCurrentTable();
         if (table == null) return;
         String category = chartCategoryBox.getValue();
-        String value = chartValueBox.getValue();
-        if (category == null || value == null) return;
+        if (category == null) return;
 
-        Chart chart = ChartBuilder.build(table, chartTypeBox.getValue(), category, value);
+        String aggMode = chartAggFunctionBox.getValue();
+        Chart chart;
+
+        if (aggMode == null || "None".equals(aggMode)) {
+            String value = chartValueBox.getValue();
+            if (value == null) return;
+            chart = ChartBuilder.build(table, chartTypeBox.getValue(), category, value);
+        } else {
+            AggregationFunction function = AggregationFunction.valueOf(aggMode);
+            String value = chartValueBox.getValue();
+            if (function.requiresValueColumn() && value == null) {
+                statusLabel.setText("Pick a value column for " + function + ".");
+                return;
+            }
+            DataTable aggregated = controller.buildAggregatedChartData(category, value, function);
+            // aggregated table's two columns are [category, function-label] —
+            // reuse them directly as the chart's category/value columns.
+            chart = ChartBuilder.build(aggregated, chartTypeBox.getValue(),
+                    aggregated.getColumnNames().get(0), aggregated.getColumnNames().get(1));
+        }
+
         chartArea.setCenter(chart);
     }
 
@@ -651,7 +713,12 @@ public class DataBrowserPage {
         sortColumnBox.setItems(columns);
         chartCategoryBox.setItems(columns);
         chartValueBox.setItems(columns);
-
+        aggGroupColumnBox.setItems(columns);
+        aggValueColumnBox.setItems(columns);
+        if (!columns.isEmpty()) {
+            aggGroupColumnBox.getSelectionModel().selectFirst();
+            aggValueColumnBox.getSelectionModel().selectFirst();
+        }
         if (!columns.isEmpty()) {
             filterColumnBox.getSelectionModel().selectFirst();
             sortColumnBox.getSelectionModel().selectFirst();
@@ -690,5 +757,23 @@ public class DataBrowserPage {
             rows.add(FXCollections.observableArrayList(row));
         }
         resultsTable.setItems(rows);
+    }
+    private void applyAggregation() {
+        String groupColumn = aggGroupColumnBox.getValue();
+        String valueColumn = aggValueColumnBox.getValue();
+        AggregationFunction function = aggFunctionBox.getValue();
+        if (groupColumn == null || function == null) return;
+        if (function.requiresValueColumn() && valueColumn == null) {
+            statusLabel.setText("Pick a value column for " + function + ".");
+            return;
+        }
+
+        try {
+            DataTable result = controller.applyAggregation(groupColumn, valueColumn, function);
+            renderTable(result);
+            statusLabel.setText("Aggregated into " + result.getRowCount() + " groups.");
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            statusLabel.setText(ex.getMessage());
+        }
     }
 }
