@@ -73,7 +73,6 @@
             <artifactId>picocli</artifactId>
             <version>4.7.6</version>
         </dependency>
-
         <!-- Oracle JDBC driver -->
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
@@ -89,6 +88,11 @@
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
             <version>21.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
         </dependency>
     </dependencies>
 
@@ -108,7 +112,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>Config.Main</mainClass>
+                                    <mainClass>dataexportapp.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -120,7 +124,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>DataExportApp.Auth.LoginService</mainClass>
+                    <mainClass>dataexportapp.auth.LoginService</mainClass>
                 </configuration>
             </plugin>
         </plugins>

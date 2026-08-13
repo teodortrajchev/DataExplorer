@@ -19,7 +19,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>Config.Main</mainClass>
+                  <mainClass>dataexportapp.Main</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -31,7 +31,7 @@
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <mainClass>DataExportApp.Auth.LoginService</mainClass>
+          <mainClass>dataexportapp.auth.LoginService</mainClass>
         </configuration>
       </plugin>
     </plugins>
