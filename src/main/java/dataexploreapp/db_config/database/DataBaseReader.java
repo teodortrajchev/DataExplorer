@@ -214,8 +214,7 @@ public class DataBaseReader {
         logger.debug("Loaded {} parameters for procedure {}.{}", params.size(), schemaOwner, procedureName);
         return params;
     }
-
-    public DataTable loadTableWithForeignKeys(String schemaOwner, String tableName, List<ForeignKeyInfo> enabledForeignKeys) throws SQLException {
+    private String buildSelectWithJoins(String schemaOwner, String tableName, List<ForeignKeyInfo> enabledForeignKeys) throws SQLException {
         IdentifierValidator.validate(schemaOwner);
         IdentifierValidator.validate(tableName);
 
@@ -247,12 +246,13 @@ public class DataBaseReader {
         for (String join : joinClauses) {
             sql.append(" ").append(join);
         }
-
-        DataTable table = runQuery(sql.toString());
+        return sql.toString();
+    }
+    public DataTable loadTableWithForeignKeys(String schemaOwner, String tableName, List<ForeignKeyInfo> enabledForeignKeys) throws SQLException {
+        DataTable table = runQuery(buildSelectWithJoins(schemaOwner, tableName, enabledForeignKeys));
         table.setTitle(tableName);
         return table;
     }
-
     public DataTable loadTable(String schemaOwner, String tableName) throws SQLException {
         return loadTableWithForeignKeys(schemaOwner, tableName, List.of());
     }
@@ -260,7 +260,18 @@ public class DataBaseReader {
         return loadProcedure(schemaOwner, procedureName, Map.of());
     }
 
+    public DataTable loadTablePage(String schemaOwner, String tableName, List<ForeignKeyInfo> enabledForeignKeys,
+                                   String orderByColumn, int offset, int pageSize) throws SQLException {
+        IdentifierValidator.validate(orderByColumn);
 
+        String sql = buildSelectWithJoins(schemaOwner, tableName, enabledForeignKeys)
+                + " ORDER BY t." + orderByColumn
+                + " OFFSET " + offset + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
+
+        DataTable table = runQuery(sql);
+        table.setTitle(tableName);
+        return table;
+    }
     public DataTable loadProcedure(String schemaOwner, String procedureName, Map<String, String> paramValues) throws SQLException {
         IdentifierValidator.validate(schemaOwner);
         IdentifierValidator.validate(procedureName);
@@ -323,6 +334,18 @@ public class DataBaseReader {
             try (ResultSet rs = (ResultSet) stmt.getObject(1)) {
                 return toDataTable(rs);
             }
+        }
+    }
+    public long getRowCount(String schemaOwner, String tableName) throws SQLException {
+        IdentifierValidator.validate(schemaOwner);
+        IdentifierValidator.validate(tableName);
+
+        String sql = "SELECT COUNT(*) AS cnt FROM " + schemaOwner + "." + tableName;
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            rs.next();
+            return rs.getLong("cnt");
         }
     }
 

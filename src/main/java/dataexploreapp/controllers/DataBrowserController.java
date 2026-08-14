@@ -36,6 +36,16 @@ public class DataBrowserController {
     private String currentTableName;
     private List<ForeignKeyInfo> currentForeignKeys = new ArrayList<>();
 
+
+    //pagination
+    public static final int DEFAULT_PAGE_SIZE = 100;
+
+    private int pageSize = DEFAULT_PAGE_SIZE;
+    private int currentPage = 0; // 0-based internally
+    private long totalRowCount = 0;
+    private String pageOrderByColumn;
+    private boolean fullTableLoaded = false;
+
     private static final String SENSITIVE_COLUMN_KEYWORD = "password";
 
     public DataBrowserController(DataBaseReader reader, String schema) {
@@ -55,10 +65,19 @@ public class DataBrowserController {
 
     // --- Loading a table -----------------------------------------------------
 
-    /** Fresh load of a table with no joined foreign keys. */
     public DataTable loadTable(String tableName) throws SQLException {
         currentTableName = tableName;
-        DataTable raw = reader.loadTableWithForeignKeys(schema, tableName, List.of());
+        currentPage = 0;
+        fullTableLoaded = false;
+        totalRowCount = reader.getRowCount(schema, tableName);
+
+        List<String> columns = reader.getColumnNames(schema, tableName);
+        pageOrderByColumn = columns.isEmpty() ? null : columns.get(0);
+
+        DataTable raw = (pageOrderByColumn == null)
+                ? reader.loadTableWithForeignKeys(schema, tableName, List.of())
+                : reader.loadTablePage(schema, tableName, List.of(), pageOrderByColumn, 0, pageSize);
+
         return adoptFreshTable(raw, false, null);
     }
 
@@ -193,6 +212,61 @@ public class DataBrowserController {
         }
         return adoptFreshTable(raw, false, null);
     }
+
+    public DataTable nextPage() throws SQLException {
+        requirePaginatedTable();
+        if ((long) (currentPage + 1) * pageSize >= totalRowCount) {
+            throw new IllegalStateException("Already on the last page.");
+        }
+        currentPage++;
+        return loadCurrentPage();
+    }
+
+    public DataTable previousPage() throws SQLException {
+        requirePaginatedTable();
+        if (currentPage == 0) {
+            throw new IllegalStateException("Already on the first page.");
+        }
+        currentPage--;
+        return loadCurrentPage();
+    }
+
+    public DataTable setPageSize(int newPageSize) throws SQLException {
+        requirePaginatedTable();
+        this.pageSize = newPageSize;
+        this.currentPage = 0;
+        return loadCurrentPage();
+    }
+
+    public DataTable loadFullTable() throws SQLException {
+        requirePaginatedTable();
+        DataTable raw = reader.loadTableWithForeignKeys(schema, currentTableName, List.of());
+        fullTableLoaded = true;
+        return adoptFreshTable(raw, false, null);
+    }
+
+    private DataTable loadCurrentPage() throws SQLException {
+        DataTable raw = reader.loadTablePage(schema, currentTableName, List.of(), pageOrderByColumn, currentPage * pageSize, pageSize);
+        return adoptFreshTable(raw, false, null);
+    }
+
+    private void requirePaginatedTable() {
+        if (currentTableName == null) {
+            throw new IllegalStateException("No table currently loaded.");
+        }
+        if (fullTableLoaded) {
+            throw new IllegalStateException("Full table is loaded — pagination isn't active.");
+        }
+    }
+
+    // --- Pagination state for the UI to read -----------------------------
+
+    public boolean isPaginated() { return currentTableName != null && !fullTableLoaded; }
+    public boolean isFullTableLoaded() { return fullTableLoaded; }
+    public int getCurrentPageDisplay() { return currentPage + 1; } // 1-based for UI
+    public int getTotalPages() { return totalRowCount == 0 ? 1 : (int) Math.ceil((double) totalRowCount / pageSize); }
+    public long getTotalRowCount() { return totalRowCount; }
+    public int getPageSize() { return pageSize; }
     // --- State accessors -------------------------------------------------
 
     public DataTable getCurrentTable() { return currentTable; }

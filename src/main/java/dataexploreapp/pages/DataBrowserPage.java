@@ -37,7 +37,10 @@ import javafx.stage.Stage;
 import java.util.*;
 
 public class DataBrowserPage {
-
+    @FunctionalInterface
+    private interface PaginationCall {
+        DataTable run() throws Exception;
+    }
     private final String username;
     private final DataBrowserController controller;
 
@@ -69,6 +72,14 @@ public class DataBrowserPage {
     private final ComboBox<String> chartAggFunctionBox =
             new ComboBox<>(FXCollections.observableArrayList("None", "SUM", "AVG", "COUNT", "MIN", "MAX"));
     private Stage stage;
+
+    private final Label paginationLabel = new Label();
+    private final Button prevPageBtn = new Button("◀ Prev");
+    private final Button nextPageBtn = new Button("Next ▶");
+    private final ComboBox<Integer> pageSizeBox =
+            new ComboBox<>(FXCollections.observableArrayList(50, 100, 500, 1000));
+    private final Button loadFullTableBtn = new Button("Load entire table");
+
 
     public DataBrowserPage(String username, DataBaseReader reader, String schema) {
         this.username = username;
@@ -226,11 +237,8 @@ public class DataBrowserPage {
         leftScrollPane.setMaxWidth(260);
 
         // CENTER PANEL
-        VBox centerPanel = new VBox(
-                10,
-                resultsTable,
-                chartArea
-        );
+        HBox paginationBar = buildPaginationBar();
+        VBox centerPanel = new VBox(10, resultsTable, paginationBar, chartArea);
 
         resultsTable.setMinHeight(400);
         chartArea.setMinHeight(600);
@@ -798,4 +806,84 @@ public class DataBrowserPage {
         task.setOnFailed(e -> statusLabel.setText("Query failed: " + task.getException().getMessage()));
         new Thread(task).start();
     }
+    private void goToPreviousPage() {
+        runPaginationAction(controller::previousPage);
+    }
+
+    private void goToNextPage() {
+        runPaginationAction(controller::nextPage);
+    }
+
+    private void changePageSize() {
+        Integer size = pageSizeBox.getValue();
+        if (size == null) return;
+        runPaginationAction(() -> controller.setPageSize(size));
+    }
+    private void updatePaginationControl() {
+        boolean paginated = controller.isPaginated();
+
+        prevPageBtn.setDisable(!paginated || controller.getCurrentPageDisplay() <= 1);
+        nextPageBtn.setDisable(!paginated || controller.getCurrentPageDisplay() >= controller.getTotalPages());
+        pageSizeBox.setDisable(!paginated);
+        loadFullTableBtn.setDisable(!paginated);
+
+        if (controller.isFullTableLoaded()) {
+            paginationLabel.setText("Full table loaded (" + controller.getCurrentTable().getRowCount() + " rows)");
+        } else if (paginated) {
+            paginationLabel.setText("Page " + controller.getCurrentPageDisplay() + " of " + controller.getTotalPages()
+                    + " (" + controller.getTotalRowCount() + " rows)");
+        } else {
+            paginationLabel.setText("N/A");
+        }
+    }
+    private void loadFullTableAsync() {
+        statusLabel.setText("Loading entire table — this may take a while for large tables...");
+        Task<DataTable> task = new Task<>() {
+            @Override protected DataTable call() throws Exception { return controller.loadFullTable(); }
+        };
+        task.setOnSucceeded(e -> {
+            populateColumnPickers();
+            renderTable(controller.getCurrentTable());
+            updatePaginationControl();
+            statusLabel.setText("Loaded full table: " + controller.getCurrentTable().getRowCount() + " rows.");
+        });
+        task.setOnFailed(e -> statusLabel.setText("Failed to load full table: " + task.getException().getMessage()));
+        new Thread(task).start();
+    }
+
+    /** Shared plumbing for prev/next/page-size — all three follow the same pattern:
+     *  run the paging call in the background, then repopulate pickers + render + update the bar. */
+    private void runPaginationAction(PaginationCall action) {
+        statusLabel.setText("Loading page...");
+        Task<DataTable> task = new Task<>() {
+            @Override protected DataTable call() throws Exception { return action.run(); }
+        };
+        task.setOnSucceeded(e -> {
+            populateColumnPickers();
+            renderTable(controller.getCurrentTable());
+            updatePaginationControl();
+            statusLabel.setText("Page " + controller.getCurrentPageDisplay() + " of " + controller.getTotalPages()
+                    + " (" + controller.getTotalRowCount() + " total rows).");
+        });
+        task.setOnFailed(e -> statusLabel.setText(task.getException().getMessage()));
+        new Thread(task).start();
+    }
+    private HBox buildPaginationBar() {
+        pageSizeBox.getSelectionModel().select(Integer.valueOf(DataBrowserController.DEFAULT_PAGE_SIZE));
+        pageSizeBox.setOnAction(e -> changePageSize());
+
+        prevPageBtn.setOnAction(e -> goToPreviousPage());
+        nextPageBtn.setOnAction(e -> goToNextPage());
+        loadFullTableBtn.setOnAction(e -> loadFullTableAsync());
+
+        HBox bar = new HBox(10,
+                new Label("Rows per page:"), pageSizeBox,
+                prevPageBtn, paginationLabel, nextPageBtn,
+                loadFullTableBtn
+        );
+        bar.setAlignment(Pos.CENTER_LEFT);
+        bar.setPadding(new Insets(6, 0, 6, 0));
+        return bar;
+    }
+
 }
