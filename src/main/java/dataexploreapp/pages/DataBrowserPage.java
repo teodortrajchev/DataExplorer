@@ -5,6 +5,7 @@ import dataexploreapp.db_config.database.ForeignKeyInfo;
 import dataexploreapp.dialogs.ExportDialog;
 import dataexploreapp.dialogs.LoginDialog;
 import dataexploreapp.dialogs.ProceduresParamsDialog;
+import dataexploreapp.dialogs.RunQueryDialog;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.WritableImage;
@@ -307,6 +308,13 @@ public class DataBrowserPage {
         importBtn.setStyle(navBtnStyle);
         importBtn.setOnAction(e -> chooseAndImportFile());
 
+        Button queryBtn = new Button("Run query");
+        queryBtn.setStyle(navBtnStyle);
+        queryBtn.setOnAction(e -> {
+            Optional<String> query = RunQueryDialog.show(stage);
+            query.ifPresent(this::runQueryAsync);
+        });
+
         Button logoutBtn = new Button("Logout");
         logoutBtn.setStyle(navBtnStyle);
         logoutBtn.setOnAction(e -> {
@@ -314,7 +322,7 @@ public class DataBrowserPage {
             stage.close();
         });
 
-        navbar.getChildren().addAll(navLabel, spacer, historyBtn, importBtn, exportBtn, logoutBtn);
+        navbar.getChildren().addAll(navLabel, spacer, historyBtn, importBtn, queryBtn, exportBtn, logoutBtn);
         return navbar;
     }
 
@@ -775,5 +783,19 @@ public class DataBrowserPage {
         } catch (IllegalStateException | IllegalArgumentException ex) {
             statusLabel.setText(ex.getMessage());
         }
+    }
+    private void runQueryAsync(String sql) {
+        statusLabel.setText("Running query...");
+        Task<DataTable> task = new Task<>() {
+            @Override protected DataTable call() throws Exception { return controller.runRawQuery(sql); }
+        };
+        task.setOnSucceeded(e -> {
+            foreignKeysBox.getChildren().setAll(new Label("N/A"));
+            populateColumnPickers();
+            renderTable(controller.getCurrentTable());
+            statusLabel.setText("Loaded " + controller.getCurrentTable().getRowCount() + " rows.");
+        });
+        task.setOnFailed(e -> statusLabel.setText("Query failed: " + task.getException().getMessage()));
+        new Thread(task).start();
     }
 }

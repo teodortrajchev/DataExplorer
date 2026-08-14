@@ -6,6 +6,7 @@ import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.db_config.database.DataTable;
 import dataexploreapp.db_config.database.ForeignKeyInfo;
 import dataexploreapp.db_config.database.ProcedureParameter;
+import dataexploreapp.db_config.validation.SQLValidator;
 import dataexploreapp.history.ExportRecord;
 import dataexploreapp.importfiles.DataImportService;
 
@@ -179,6 +180,18 @@ public class DataBrowserController {
     public DataTable buildAggregatedChartData(String groupColumn, String valueColumn, AggregationFunction function) {
         requireLoadedTable();
         return Aggregator.aggregate(currentTable, groupColumn, valueColumn, function);
+    }
+
+
+    public DataTable runRawQuery(String sql) throws SQLException {
+        SQLValidator.validate(sql);
+        currentTableName = null;
+        currentForeignKeys = List.of();
+        DataTable raw = reader.runQuery(sql);
+        if (raw.getTitle() == null || raw.getTitle().isBlank()) {
+            raw.setTitle("Query result");
+        }
+        return adoptFreshTable(raw, false, null);
     }
     // --- State accessors -------------------------------------------------
 
