@@ -57,7 +57,8 @@ public class DataBrowserPage {
     private final ComboBox<ChartBuilder.ChartType> chartTypeBox =
             new ComboBox<>(FXCollections.observableArrayList(ChartBuilder.ChartType.values()));
     private final ComboBox<String> chartCategoryBox = new ComboBox<>();
-    private final ComboBox<String> chartValueBox = new ComboBox<>();
+    private final VBox chartSeriesBox = new VBox(5);
+    private final Map<String, CheckBox> chartSeriesCheckBoxes = new LinkedHashMap<>();
     private final VBox columnsBox = new VBox(5);
     private final Map<String, CheckBox> columnCheckBoxes = new LinkedHashMap<>();
     private final Label statusLabel = new Label();
@@ -258,7 +259,7 @@ public class DataBrowserPage {
 
         root.setTop(buildNavbar());
         root.setLeft(leftScrollPane);
-        root.setRight(buildControlsPanel());
+        root.setRight(buildControlsScrollPane());
         root.setCenter(centerScrollPane);
 
         BorderPane.setMargin(centerPanel, new Insets(10));
@@ -381,13 +382,18 @@ public class DataBrowserPage {
                 aggregate, aggGroupColumnBox, aggValueColumnBox, aggFunctionBox, applyAggBtn,
                 new Separator(),
                 chart, chartTypeBox, chartCategoryBox,
-                va, chartAggFunctionBox, chartValueBox,
+                va, chartAggFunctionBox,
+                new Label("Series:"),
+                chartSeriesBox,
                 showChartBtn, saveChartBtn,
                 new Separator(),
                 statusLabel
         );
         panel.setPadding(new Insets(10));
         panel.setPrefWidth(240);
+        panel.setMinWidth(240);
+        panel.setMaxWidth(Double.MAX_VALUE);
+
         return panel;
     }
 
@@ -494,7 +500,24 @@ public class DataBrowserPage {
         task.setOnFailed(e -> statusLabel.setText("Failed to check parameters: " + task.getException().getMessage()));
         new Thread(task).start();
     }
+    private ScrollPane buildControlsScrollPane() {
 
+        VBox controlsPanel = buildControlsPanel();
+
+        ScrollPane scrollPane = new ScrollPane(controlsPanel);
+
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(false);
+
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        scrollPane.setPrefWidth(260);
+        scrollPane.setMinWidth(260);
+        scrollPane.setMaxWidth(260);
+
+        return scrollPane;
+    }
     private void loadProcedureAsync(String procedureName, Map<String, String> paramValues, ExportRecord historyRecord) {
         statusLabel.setText("Loading " + procedureName + "...");
         Task<DataTable> task = new Task<>() {
@@ -637,30 +660,100 @@ public class DataBrowserPage {
 
     private void renderChart() {
         DataTable table = controller.getCurrentTable();
-        if (table == null) return;
+
+        if (table == null) {
+            statusLabel.setText("Load a table first.");
+            return;
+        }
+
         String category = chartCategoryBox.getValue();
-        if (category == null) return;
+
+        if (category == null) {
+            statusLabel.setText("Select a category column.");
+            return;
+        }
+
+        ChartBuilder.ChartType chartType = chartTypeBox.getValue();
+
+        if (chartType == null) {
+            statusLabel.setText("Select a chart type.");
+            return;
+        }
 
         String aggMode = chartAggFunctionBox.getValue();
-        Chart chart;
+
+        // NO AGGREGATION
 
         if (aggMode == null || "None".equals(aggMode)) {
-            String value = chartValueBox.getValue();
-            if (value == null) return;
-            chart = ChartBuilder.build(table, chartTypeBox.getValue(), category, value);
-        } else {
-            AggregationFunction function = AggregationFunction.valueOf(aggMode);
-            String value = chartValueBox.getValue();
-            if (function.requiresValueColumn() && value == null) {
-                statusLabel.setText("Pick a value column for " + function + ".");
+
+            List<String> selectedSeries =
+                    chartSeriesCheckBoxes.entrySet()
+                            .stream()
+                            .filter(entry -> entry.getValue().isSelected())
+                            .map(Map.Entry::getKey)
+                            .toList();
+
+            if (selectedSeries.isEmpty()) {
+                statusLabel.setText("Select at least one series.");
                 return;
             }
-            DataTable aggregated = controller.buildAggregatedChartData(category, value, function);
-            // aggregated table's two columns are [category, function-label] —
-            // reuse them directly as the chart's category/value columns.
-            chart = ChartBuilder.build(aggregated, chartTypeBox.getValue(),
-                    aggregated.getColumnNames().get(0), aggregated.getColumnNames().get(1));
+
+            Chart chart = ChartBuilder.build(
+                    table,
+                    chartType,
+                    category,
+                    selectedSeries
+            );
+
+            chartArea.setCenter(chart);
+            return;
         }
+
+        // AGGREGATION
+
+        AggregationFunction function =
+                AggregationFunction.valueOf(aggMode);
+
+        List<String> selectedSeries =
+                chartSeriesCheckBoxes.entrySet()
+                        .stream()
+                        .filter(entry -> entry.getValue().isSelected())
+                        .map(Map.Entry::getKey)
+                        .toList();
+
+        // Aggregation currently supports ONE value column.
+        String value = selectedSeries.isEmpty()
+                ? null
+                : selectedSeries.get(0);
+
+        if (function.requiresValueColumn() && value == null) {
+            statusLabel.setText(
+                    "Pick at least one series for " + function + "."
+            );
+            return;
+        }
+
+        DataTable aggregated =
+                controller.buildAggregatedChartData(
+                        category,
+                        value,
+                        function
+                );
+
+        List<String> aggregatedColumns =
+                aggregated.getColumnNames();
+
+        if (aggregatedColumns.size() < 2) {
+            statusLabel.setText("Invalid aggregated chart data.");
+            return;
+        }
+
+        Chart chart = ChartBuilder.build(
+                aggregated,
+                chartType,
+                aggregatedColumns.get(0),
+                List.of(aggregatedColumns.get(1))
+        );
 
         chartArea.setCenter(chart);
     }
@@ -723,33 +816,42 @@ public class DataBrowserPage {
 
     private void populateColumnPickers() {
         DataTable original = controller.getOriginalTable();
-        ObservableList<String> columns = FXCollections.observableArrayList(original.getColumnNames());
+
+        ObservableList<String> columns =
+                FXCollections.observableArrayList(original.getColumnNames());
 
         filterColumnBox.setItems(columns);
         sortColumnBox.setItems(columns);
         chartCategoryBox.setItems(columns);
-        chartValueBox.setItems(columns);
+
         aggGroupColumnBox.setItems(columns);
         aggValueColumnBox.setItems(columns);
+
         if (!columns.isEmpty()) {
             aggGroupColumnBox.getSelectionModel().selectFirst();
             aggValueColumnBox.getSelectionModel().selectFirst();
-        }
-        if (!columns.isEmpty()) {
+
             filterColumnBox.getSelectionModel().selectFirst();
             sortColumnBox.getSelectionModel().selectFirst();
             chartCategoryBox.getSelectionModel().selectFirst();
-            chartValueBox.getSelectionModel().selectFirst();
         }
 
-        columnsBox.getChildren().clear();
-        columnCheckBoxes.clear();
-        for (String columnName : columns) {
-            CheckBox checkBox = new CheckBox(columnName);
-            checkBox.setSelected(true);
-            checkBox.setOnAction(e -> updateVisibleColumns());
-            columnCheckBoxes.put(columnName, checkBox);
-            columnsBox.getChildren().add(checkBox);
+        // -----------------------------
+        // Chart series checkboxes
+        // -----------------------------
+
+        chartSeriesBox.getChildren().clear();
+        chartSeriesCheckBoxes.clear();
+
+        for (String column : columns) {
+
+            CheckBox checkBox = new CheckBox(column);
+
+            // Don't select the first column if it is the category
+            checkBox.setSelected(false);
+
+            chartSeriesCheckBoxes.put(column, checkBox);
+            chartSeriesBox.getChildren().add(checkBox);
         }
     }
 
