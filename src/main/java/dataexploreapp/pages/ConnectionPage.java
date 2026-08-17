@@ -108,6 +108,7 @@ public class ConnectionPage {
         return navbar;
     }
 
+
     private void attemptConnect() {
         String url = urlField.getText().trim();
         String dbUser = dbUserField.getText().trim();
@@ -123,13 +124,17 @@ public class ConnectionPage {
         statusLabel.setTextFill(Color.GRAY);
         statusLabel.setText("Connecting...");
 
-        DataBaseReader reader = new DataBaseReader(url, dbUser, dbPassword);
-
-        Task<Void> connectTask = new Task<>() {
+        Task<DataBaseReader> connectTask = new Task<>() {
             @Override
-            protected Void call() throws Exception {
+            protected DataBaseReader call() throws Exception {
+                // Constructing DataBaseReader is what actually connects — HikariCP
+                // validates connectivity eagerly in its constructor — so this has
+                // to run inside the Task. If it ran before the Task was created,
+                // a bad connection would throw synchronously on the JavaFX
+                // Application Thread, before setOnFailed even exists to catch it.
+                DataBaseReader reader = new DataBaseReader(url, dbUser, dbPassword);
                 reader.testConnection();
-                return null;
+                return reader;
             }
         };
 
@@ -137,19 +142,15 @@ public class ConnectionPage {
             connectButton.setDisable(false);
             statusLabel.setTextFill(Color.GREEN);
             statusLabel.setText("Connected!");
-            new DataBrowserPage(username, reader,schema).show(stage);
+            new DataBrowserPage(username, connectTask.getValue(), schema).show(stage);
         });
-        connectTask.setOnSucceeded(e -> {
-            connectButton.setDisable(false);
-            statusLabel.setTextFill(Color.GREEN);
-            statusLabel.setText("Connected!");
-            new DataBrowserPage(username, reader, schema).show(stage);
-        });
+
         connectTask.setOnFailed(e -> {
             connectButton.setDisable(false);
             statusLabel.setTextFill(Color.RED);
-            statusLabel.setText("Connection failed: " + connectTask.getException().getMessage());
-            connectTask.getException().printStackTrace();
+            Throwable ex = connectTask.getException();
+            statusLabel.setText("Connection failed: " + (ex != null ? ex.getMessage() : "unknown error"));
+            if (ex != null) ex.printStackTrace();
         });
 
         new Thread(connectTask).start();

@@ -6,9 +6,8 @@ import java.util.regex.Pattern;
 
 public final class IdentifierValidator {
 
-    // Oracle unquoted identifiers: start with a letter, then letters/digits/_/$/#.
-    // This intentionally rejects quoted identifiers, spaces, and anything
-    // containing SQL syntax characters (;, ', --, etc.).
+    // intentionally rejects quoted identifiers, spaces, and anything containing SQL syntax characters (;, ', --, etc.).
+
     private static final Pattern VALID_IDENTIFIER = Pattern.compile("^[A-Za-z][A-Za-z0-9_$#]*$");
     private static final int MAX_LENGTH = 128; // Oracle 12.2+ identifier length limit
 

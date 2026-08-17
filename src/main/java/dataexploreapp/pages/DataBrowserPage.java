@@ -14,7 +14,9 @@ import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.db_config.database.DataTable;
 import dataexploreapp.db_config.database.ProcedureParameter;
 import dataexploreapp.auth.AuthService;
-
+import dataexploreapp.filtering.FilterCombinator;
+import dataexploreapp.filtering.FilterCondition;
+import dataexploreapp.filtering.FilterOperator;
 import java.io.File;
 import java.io.IOException;
 
@@ -35,11 +37,72 @@ import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DataBrowserPage {
     @FunctionalInterface
     private interface PaginationCall {
         DataTable run() throws Exception;
+    }
+    /** One row in the filter builder: column, operator, value(s), remove button. */
+    private class FilterRowControls {
+        final ComboBox<String> columnBox = new ComboBox<>();
+        final ComboBox<FilterOperator> operatorBox = new ComboBox<>(FXCollections.observableArrayList(FilterOperator.values()));
+        final TextField valueField = new TextField();
+        final TextField secondValueField = new TextField();
+        final HBox container;
+
+        FilterRowControls() {
+            columnBox.setItems(currentColumns);
+            if (!currentColumns.isEmpty()) columnBox.getSelectionModel().selectFirst();
+            operatorBox.getSelectionModel().select(FilterOperator.CONTAINS);
+            valueField.setPromptText("value");
+            secondValueField.setPromptText("and value");
+            secondValueField.setVisible(false);
+            secondValueField.setManaged(false);
+
+            operatorBox.valueProperty().addListener((obs, old, val) -> {
+                boolean needsSecond = val != null && val.requiresSecondValue();
+                secondValueField.setVisible(needsSecond);
+                secondValueField.setManaged(needsSecond);
+            });
+
+            Button removeBtn = new Button("X");
+            removeBtn.setOnAction(e -> removeFilterRow(this));
+            removeBtn.setStyle("-fx-text-fill:red;");
+            removeBtn.setMinWidth(25);
+            removeBtn.setPrefWidth(25);
+            removeBtn.setMaxWidth(25);
+            removeBtn.setPadding(new Insets(0));
+
+            columnBox.setPrefWidth(90);
+            operatorBox.setPrefWidth(55);
+            valueField.setPrefWidth(45);
+            secondValueField.setPrefWidth(45);
+
+            container = new HBox(
+                    4,
+                    columnBox,
+                    operatorBox,
+                    valueField,
+                    secondValueField,
+                    removeBtn
+            );
+
+            container.setAlignment(Pos.CENTER_LEFT);
+        }
+
+        FilterCondition toCondition() {
+            FilterOperator operator = operatorBox.getValue();
+            String secondValue = operator != null && operator.requiresSecondValue() ? secondValueField.getText() : null;
+            return new FilterCondition(columnBox.getValue(), operator, valueField.getText(), secondValue);
+        }
+
+        boolean isComplete() {
+            FilterCondition c = toCondition();
+            if (c.getColumn() == null || c.getOperator() == null || c.getValue() == null || c.getValue().isBlank()) return false;
+            return !c.getOperator().requiresSecondValue() || (c.getSecondValue() != null && !c.getSecondValue().isBlank());
+        }
     }
     private final String username;
     private final DataBrowserController controller;
@@ -48,8 +111,10 @@ public class DataBrowserPage {
     private final TableView<ObservableList<Object>> resultsTable = new TableView<>();
     private final ListView<String> procedureList = new ListView<>();
 
-    private final ComboBox<String> filterColumnBox = new ComboBox<>();
-    private final TextField filterValueField = new TextField();
+    private final ObservableList<String> currentColumns = FXCollections.observableArrayList();
+    private final ComboBox<FilterCombinator> filterCombinatorBox = new ComboBox<>(FXCollections.observableArrayList(FilterCombinator.values()));
+    private final VBox filterRowsBox = new VBox(6);
+    private final List<FilterRowControls> filterRows = new java.util.ArrayList<>();
     private final ComboBox<String> sortColumnBox = new ComboBox<>();
     private final ComboBox<String> sortDirectionBox =
             new ComboBox<>(FXCollections.observableArrayList("Ascending", "Descending"));
@@ -336,15 +401,17 @@ public class DataBrowserPage {
     }
 
     private VBox buildControlsPanel() {
-        Button applyFilterBtn = new Button("Apply filter");
-        applyFilterBtn.setOnAction(e -> applyFilter());
-        Button clearFilterBtn = new Button("Clear");
-        clearFilterBtn.setOnAction(e -> resetFilter());
-        filterValueField.setPromptText("Contains...");
+        Button addFilterBtn = new Button("+ Add condition");
+        addFilterBtn.setOnAction(e -> addFilterRow());
+        Button applyFiltersBtn = new Button("Apply filters");
+        applyFiltersBtn.setOnAction(e -> applyFilters());
+        Button clearFiltersBtn = new Button("Clear");
+        clearFiltersBtn.setOnAction(e -> clearFilters());
 
-        sortDirectionBox.getSelectionModel().selectFirst();
-        Button applySortBtn = new Button("Apply sort");
-        applySortBtn.setOnAction(e -> applySort());
+        filterCombinatorBox.getSelectionModel().select(FilterCombinator.AND);
+        addFilterRow(); // start with one empty row
+
+
 
         aggFunctionBox.getSelectionModel().select(AggregationFunction.COUNT);
         Button applyAggBtn = new Button("Apply aggregation");
@@ -362,7 +429,8 @@ public class DataBrowserPage {
 
         Button saveChartBtn = new Button("Save chart as image");
         saveChartBtn.setOnAction(e -> saveChartAsImage());
-
+        Button applySortBtn = new Button("Apply sort");
+        applySortBtn.setOnAction(e -> applySort());
 
         Label filter=new Label("Filter:");
         filter.setStyle("-fx-text-fill: black;");
@@ -374,8 +442,15 @@ public class DataBrowserPage {
         chart.setStyle("-fx-text-fill: black;");
         Label va=new Label("Value / Aggregation:");
         va.setStyle("-fx-text-fill: black;");
+        VBox filterSection = new VBox(6,
+                filter,
+                new HBox(8, new Label("Combine with:"), filterCombinatorBox),
+                filterRowsBox,
+                addFilterBtn,
+                new HBox(8, applyFiltersBtn, clearFiltersBtn)
+        );
         VBox panel = new VBox(10,
-                filter, filterColumnBox, filterValueField, new HBox(8, applyFilterBtn, clearFilterBtn),
+                filterSection,
                 new Separator(),
                 sort, sortColumnBox, sortDirectionBox, applySortBtn,
                 new Separator(),
@@ -578,9 +653,12 @@ public class DataBrowserPage {
     }
 
     private void applyReapplyOutcome(DataBrowserController.ReapplyOutcome outcome) {
+        resetFilterRowsUI();
         if (outcome.hasFilter()) {
-            filterColumnBox.setValue(outcome.filterColumn());
-            filterValueField.setText(outcome.filterValue());
+            FilterRowControls row = filterRows.get(0);
+            row.columnBox.setValue(outcome.filterColumn());
+            row.operatorBox.setValue(FilterOperator.CONTAINS);
+            row.valueField.setText(outcome.filterValue());
         }
         if (outcome.hasSort()) {
             sortColumnBox.setValue(outcome.sortColumn());
@@ -619,33 +697,8 @@ public class DataBrowserPage {
         }
     }
 
-    // --- Filter / sort / chart: UI events, delegate to controller synchronously -----
-    // (These operate on already-loaded in-memory data — no DB round trip, so no
-    // Task/threading is needed; the controller call returns immediately.)
+    // sort / chart: UI events, delegate to controller synchronously
 
-    private void applyFilter() {
-        String column = filterColumnBox.getValue();
-        String value = filterValueField.getText();
-        if (column == null || value == null || value.isBlank()) return;
-        try {
-            DataTable result = controller.applyFilter(column, value);
-            renderTable(result);
-            statusLabel.setText(result.getRowCount() + " rows after filter.");
-        } catch (IllegalStateException ex) {
-            statusLabel.setText(ex.getMessage());
-        }
-    }
-
-    private void resetFilter() {
-        try {
-            DataTable result = controller.resetFilter();
-            filterValueField.clear();
-            renderTable(result);
-            statusLabel.setText(result.getRowCount() + " rows.");
-        } catch (IllegalStateException ex) {
-            statusLabel.setText(ex.getMessage());
-        }
-    }
 
     private void applySort() {
         String column = sortColumnBox.getValue();
@@ -721,7 +774,7 @@ public class DataBrowserPage {
                         .map(Map.Entry::getKey)
                         .toList();
 
-        // Aggregation currently supports ONE value column.
+        // Aggregation (currently supports one value column)
         String value = selectedSeries.isEmpty()
                 ? null
                 : selectedSeries.get(0);
@@ -795,9 +848,21 @@ public class DataBrowserPage {
             return;
         }
 
-        boolean filterActive = !filterValueField.getText().isBlank();
-        String filterColumn = filterActive ? filterColumnBox.getValue() : null;
-        String filterValue = filterActive ? filterValueField.getText() : null;
+        List<FilterCondition> activeConditions = filterRows.stream()
+                .filter(FilterRowControls::isComplete)
+                .map(FilterRowControls::toCondition)
+                .toList();
+
+        String filterColumn = null;
+        String filterValue = null;
+        if (!activeConditions.isEmpty()) {
+            filterColumn = activeConditions.size() == 1 ? activeConditions.get(0).getColumn() : "Multiple";
+            String joiner = filterCombinatorBox.getValue() == FilterCombinator.OR ? " OR " : " AND ";
+            filterValue = activeConditions.stream()
+                    .map(FilterCondition::describe)
+                    .collect(Collectors.joining(joiner));
+        }
+
         String sortColumn = sortColumnBox.getValue();
         Boolean sortAscending = sortColumn == null ? null : "Ascending".equals(sortDirectionBox.getValue());
 
@@ -820,7 +885,9 @@ public class DataBrowserPage {
         ObservableList<String> columns =
                 FXCollections.observableArrayList(original.getColumnNames());
 
-        filterColumnBox.setItems(columns);
+        currentColumns.setAll(columns);
+        resetFilterRowsUI(); // rebuild filter row(s) against the newly loaded table's columns
+
         sortColumnBox.setItems(columns);
         chartCategoryBox.setItems(columns);
 
@@ -831,25 +898,17 @@ public class DataBrowserPage {
             aggGroupColumnBox.getSelectionModel().selectFirst();
             aggValueColumnBox.getSelectionModel().selectFirst();
 
-            filterColumnBox.getSelectionModel().selectFirst();
             sortColumnBox.getSelectionModel().selectFirst();
             chartCategoryBox.getSelectionModel().selectFirst();
         }
 
-        // -----------------------------
-        // Chart series checkboxes
-        // -----------------------------
-
+        // chart series checkboxes
         chartSeriesBox.getChildren().clear();
         chartSeriesCheckBoxes.clear();
 
         for (String column : columns) {
-
             CheckBox checkBox = new CheckBox(column);
-
-            // Don't select the first column if it is the category
             checkBox.setSelected(false);
-
             chartSeriesCheckBoxes.put(column, checkBox);
             chartSeriesBox.getChildren().add(checkBox);
         }
@@ -953,8 +1012,8 @@ public class DataBrowserPage {
         new Thread(task).start();
     }
 
-    /** Shared plumbing for prev/next/page-size — all three follow the same pattern:
-     *  run the paging call in the background, then repopulate pickers + render + update the bar. */
+
+    // run the paging call in the background, then repopulate pickers + render + update the bar.
     private void runPaginationAction(PaginationCall action) {
         statusLabel.setText("Loading page...");
         Task<DataTable> task = new Task<>() {
@@ -986,6 +1045,54 @@ public class DataBrowserPage {
         bar.setAlignment(Pos.CENTER_LEFT);
         bar.setPadding(new Insets(6, 0, 6, 0));
         return bar;
+    }
+    private void addFilterRow() {
+        FilterRowControls row = new FilterRowControls();
+        filterRows.add(row);
+        filterRowsBox.getChildren().add(row.container);
+    }
+
+    private void removeFilterRow(FilterRowControls row) {
+        filterRows.remove(row);
+        filterRowsBox.getChildren().remove(row.container);
+    }
+
+    private void resetFilterRowsUI() {
+        filterRows.clear();
+        filterRowsBox.getChildren().clear();
+        addFilterRow();
+    }
+
+    private void applyFilters() {
+        List<FilterCondition> conditions = filterRows.stream()
+                .filter(FilterRowControls::isComplete)
+                .map(FilterRowControls::toCondition)
+                .toList();
+
+        if (conditions.isEmpty()) {
+            statusLabel.setText("Add at least one complete filter condition.");
+            return;
+        }
+
+        FilterCombinator combinator = filterCombinatorBox.getValue() == null ? FilterCombinator.AND : filterCombinatorBox.getValue();
+        try {
+            DataTable result = controller.applyFilters(conditions, combinator);
+            renderTable(result);
+            statusLabel.setText(result.getRowCount() + " rows after filter.");
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            statusLabel.setText(ex.getMessage());
+        }
+    }
+
+    private void clearFilters() {
+        resetFilterRowsUI();
+        try {
+            DataTable result = controller.resetFilter();
+            renderTable(result);
+            statusLabel.setText(result.getRowCount() + " rows.");
+        } catch (IllegalStateException ex) {
+            statusLabel.setText(ex.getMessage());
+        }
     }
 
 }

@@ -9,7 +9,9 @@ import dataexploreapp.db_config.database.ProcedureParameter;
 import dataexploreapp.db_config.validation.SQLValidator;
 import dataexploreapp.history.ExportRecord;
 import dataexploreapp.importfiles.DataImportService;
-
+import dataexploreapp.filtering.DataFilterEngine;
+import dataexploreapp.filtering.FilterCombinator;
+import dataexploreapp.filtering.FilterCondition;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,13 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Owns all data-loading, filtering, sorting, and history-reapply logic for
- * the data browser screen. Deliberately has no JavaFX imports — it can be
- * constructed and tested with a mocked DataBaseReader, with no Stage/Scene
- * required. DataBrowserPage wraps every call here in a javafx.concurrent.Task
- * and is responsible for all UI construction, threading, and rendering.
- */
 public class DataBrowserController {
 
     private final DataBaseReader reader;
@@ -129,9 +124,9 @@ public class DataBrowserController {
 
     // --- Filter / sort (operate on whatever is currently loaded) -------------
 
-    public DataTable applyFilter(String column, String value) {
+    public DataTable applyFilters(List<FilterCondition> conditions, FilterCombinator combinator) {
         requireLoadedTable();
-        currentTable = currentTable.filterContains(column, value);
+        currentTable = DataFilterEngine.apply(originalTable, conditions, combinator);
         return currentTable;
     }
 
@@ -139,6 +134,10 @@ public class DataBrowserController {
         requireLoadedTable();
         currentTable = originalTable;
         return currentTable;
+    }
+
+    public boolean isNumericColumn(String columnName) {
+        return originalTable != null && originalTable.isNumericColumn(columnName);
     }
 
     public DataTable applySort(String column, boolean ascending) {
@@ -180,7 +179,9 @@ public class DataBrowserController {
 
         DataTable result = currentTable;
         if (hasFilter) {
-            result = applyFilter(record.getFilterColumn(), record.getFilterValue());
+            FilterCondition legacyCondition = new FilterCondition(
+                    record.getFilterColumn(), dataexploreapp.filtering.FilterOperator.CONTAINS, record.getFilterValue());
+            result = applyFilters(List.of(legacyCondition), FilterCombinator.AND);
         }
         if (hasSort) {
             result = applySort(record.getSortColumn(), Boolean.TRUE.equals(record.getSortAscending()));

@@ -73,17 +73,42 @@ public class DataTable {
 
         return filtered;
     }
+
+     // true if every non-null value in the column parses as a number.decide whether sortBy compares numerically or as text.
+    public boolean isNumericColumn(String columnName) {
+        int colIndex = columnNames.indexOf(columnName);
+        if (colIndex == -1) {
+            throw new IllegalArgumentException("Unknown column: " + columnName);
+        }
+        boolean sawValue = false;
+        for (Object[] row : rows) {
+            Object value = row[colIndex];
+            if (value == null) continue;
+            sawValue = true;
+            if (toNullableDouble(value) == null) {
+                return false;
+            }
+        }
+        return sawValue; // an empty/all-null column isn't considered numeric
+    }
+
     public DataTable sortBy(String columnName, boolean ascending) {
         int colIndex = columnNames.indexOf(columnName);
         if (colIndex == -1) {
             throw new IllegalArgumentException("Unknown column: " + columnName);
         }
 
+        boolean numeric = isNumericColumn(columnName);
         List<Object[]> sortedRows = new ArrayList<>(rows);
-        Comparator<Object[]> comparator = Comparator.comparing(
-                r -> r[colIndex] == null ? "" : r[colIndex].toString(),
-                String.CASE_INSENSITIVE_ORDER
-        );
+
+        Comparator<Object[]> comparator = numeric
+                ? Comparator.comparing(
+                (Object[] r) -> toNullableDouble(r[colIndex]),
+                Comparator.nullsFirst(Comparator.naturalOrder()))
+                : Comparator.comparing(
+                (Object[] r) -> r[colIndex] == null ? "" : r[colIndex].toString(),
+                String.CASE_INSENSITIVE_ORDER);
+
         if (!ascending) {
             comparator = comparator.reversed();
         }
@@ -95,5 +120,15 @@ public class DataTable {
             sorted.addRow(row);
         }
         return sorted;
+    }
+
+    private static Double toNullableDouble(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number number) return number.doubleValue();
+        try {
+            return Double.parseDouble(value.toString().trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

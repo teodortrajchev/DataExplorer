@@ -27,6 +27,7 @@ public class DataBaseReader {
         config.setUsername(username);
         config.setPassword(password);
         config.setMaximumPoolSize(5);
+        config.setConnectionTimeout(5000);
         this.dataSource = new HikariDataSource(config);
         logger.info("Database connection pool initialized for user: {}", username);
     }
