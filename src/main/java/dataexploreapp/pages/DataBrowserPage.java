@@ -19,7 +19,7 @@ import dataexploreapp.filtering.FilterCondition;
 import dataexploreapp.filtering.FilterOperator;
 import java.io.File;
 import java.io.IOException;
-
+import dataexploreapp.pages.SettingsPage;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import dataexploreapp.charts.ChartBuilder;
@@ -378,6 +378,10 @@ public class DataBrowserPage {
         exportBtn.setStyle(navBtnStyle);
         exportBtn.setOnAction(e -> openExportDialog());
 
+        Button settingsBtn = new Button("Settings");
+        settingsBtn.setStyle(navBtnStyle);
+        settingsBtn.setOnAction(e -> new SettingsPage(username, controller.getReader(), controller.getSchema()).show(stage));
+
         Button importBtn = new Button("Import file");
         importBtn.setStyle(navBtnStyle);
         importBtn.setOnAction(e -> chooseAndImportFile());
@@ -396,8 +400,7 @@ public class DataBrowserPage {
             stage.close();
         });
 
-        navbar.getChildren().addAll(navLabel, spacer, historyBtn, importBtn, queryBtn, exportBtn, logoutBtn);
-        return navbar;
+        navbar.getChildren().addAll(navLabel, spacer, historyBtn, importBtn, queryBtn, settingsBtn, exportBtn, logoutBtn);        return navbar;
     }
 
     private VBox buildControlsPanel() {

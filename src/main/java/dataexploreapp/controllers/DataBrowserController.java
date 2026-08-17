@@ -259,6 +259,9 @@ public class DataBrowserController {
             throw new IllegalStateException("Full table is loaded — pagination isn't active.");
         }
     }
+    public DataBaseReader getReader() {
+        return reader;
+    }
 
     // --- Pagination state for the UI to read -----------------------------
 

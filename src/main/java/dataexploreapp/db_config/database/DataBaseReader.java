@@ -371,4 +371,11 @@ public class DataBaseReader {
 
         return table;
     }
+    public String getJdbcUrl() {
+        return dataSource.getJdbcUrl();
+    }
+
+    public String getUsername() {
+        return dataSource.getUsername();
+    }
 }
