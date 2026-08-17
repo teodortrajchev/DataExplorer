@@ -1,3 +1,6 @@
+.axis-label {
+    -fx-text-fill: black;
+}
 .welcome-center {
     -fx-background-color: linear-gradient(to bottom right, #1f2937, #111827);
 }
@@ -7,16 +10,13 @@
     -fx-font-weight: bold;
     -fx-text-fill: white;
 }
-.axis-label {
-    -fx-text-fill: black;
-}
 .welcome-subtitle {
     -fx-font-size: 14px;
     -fx-text-fill: #9ca3af;
 }
-Label{
-    -fx-text-fill: white;
-}
+/*Label{*/
+/*    -fx-text-fill: white;*/
+/*}*/
 .text-field, .password-field {
     -fx-prompt-text-fill: #4b5563;
 }

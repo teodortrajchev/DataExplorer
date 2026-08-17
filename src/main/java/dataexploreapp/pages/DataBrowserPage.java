@@ -268,7 +268,7 @@ public class DataBrowserPage {
         // SCENE
         Scene scene = new Scene(root, 1400, 800);
 
-        var cssUrl = getClass().getResource("welcome.css");
+        var cssUrl = getClass().getResource("databrowser.css");
 
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
