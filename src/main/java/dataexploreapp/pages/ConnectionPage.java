@@ -97,14 +97,9 @@ public class ConnectionPage {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button logoutBtn = new Button("Logout");
-        logoutBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;");
-        logoutBtn.setOnAction(e -> {
-            new LoginDialog(new AuthService()).show(new Stage());
-            stage.close();
-        });
 
-        navbar.getChildren().addAll(navLabel, spacer, logoutBtn);
+
+        navbar.getChildren().addAll(navLabel, spacer);
         return navbar;
     }
 

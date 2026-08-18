@@ -36,6 +36,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -378,9 +379,15 @@ public class DataBrowserPage {
         exportBtn.setStyle(navBtnStyle);
         exportBtn.setOnAction(e -> openExportDialog());
 
-        Button settingsBtn = new Button("Settings");
+        Button settingsBtn = new Button("Account");
         settingsBtn.setStyle(navBtnStyle);
-        settingsBtn.setOnAction(e -> new AccountPage(username, controller.getReader(), controller.getSchema()).show(stage));
+        settingsBtn.setOnAction(e -> {
+            try {
+                new AccountPage(username, controller.getReader(), controller.getSchema()).show(stage);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         Button importBtn = new Button("Import file");
         importBtn.setStyle(navBtnStyle);
@@ -400,7 +407,7 @@ public class DataBrowserPage {
             stage.close();
         });
 
-        navbar.getChildren().addAll(navLabel, spacer, historyBtn, importBtn, queryBtn, settingsBtn, exportBtn, logoutBtn);        return navbar;
+        navbar.getChildren().addAll(settingsBtn, spacer, historyBtn, importBtn, queryBtn, exportBtn, logoutBtn);        return navbar;
     }
 
     private VBox buildControlsPanel() {

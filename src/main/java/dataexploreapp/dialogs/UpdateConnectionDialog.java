@@ -40,7 +40,7 @@ public class UpdateConnectionDialog {
     }
     public void show(Stage ownerStage) {
         Stage dialogStage = new Stage();
-
+        this.ownerStage=ownerStage;
         dialogStage.initOwner(ownerStage);
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         Label title = new Label("Update your connection details, or connect to a different database entirely.");
