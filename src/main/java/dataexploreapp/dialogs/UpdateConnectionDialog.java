@@ -1,6 +1,8 @@
-package dataexploreapp.pages;
+package dataexploreapp.dialogs;
 
 import dataexploreapp.db_config.database.DataBaseReader;
+import dataexploreapp.pages.AccountPage;
+import dataexploreapp.pages.DataBrowserPage;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,11 +11,15 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class SettingsPage {
+public class UpdateConnectionDialog {
 
     private final String username;
     private final DataBaseReader currentReader;
@@ -26,25 +32,19 @@ public class SettingsPage {
     private final Label statusLabel = new Label();
     private final Button connectButton = new Button("Connect");
     private final Button cancelButton = new Button("Cancel");
-
-    private Stage stage;
-
-    public SettingsPage(String username, DataBaseReader currentReader, String currentSchema) {
+    private Stage ownerStage;
+    public UpdateConnectionDialog(String username, DataBaseReader currentReader, String currentSchema) {
         this.username = username;
         this.currentReader = currentReader;
         this.currentSchema = currentSchema;
     }
+    public void show(Stage ownerStage) {
+        Stage dialogStage = new Stage();
 
-    public void show(Stage stage) {
-        this.stage = stage;
-
-        HBox navbar = buildNavbar();
-
-        Label title = new Label("Database settings");
-        title.getStyleClass().add("welcome-title");
-
-        Label subtitle = new Label("Update your connection details, or connect to a different database entirely.");
-        subtitle.getStyleClass().add("welcome-subtitle");
+        dialogStage.initOwner(ownerStage);
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        Label title = new Label("Update your connection details, or connect to a different database entirely.");
+        title.getStyleClass().add("welcome-subtitle");
 
         // Prefill everything except password — never re-display a stored credential.
         urlField.setText(currentReader.getJdbcUrl());
@@ -74,50 +74,33 @@ public class SettingsPage {
         schemaField.setPrefWidth(300);
 
         connectButton.getStyleClass().add("primary-button");
-        connectButton.setOnAction(e -> attemptReconnect());
-        cancelButton.setOnAction(e -> new DataBrowserPage(username, currentReader, currentSchema).show(stage));
+        connectButton.setOnAction(e -> attemptReconnect(dialogStage));
+        cancelButton.setOnAction(e -> dialogStage.close());
         statusLabel.setStyle("-fx-font-style: italic;");
 
         HBox buttons = new HBox(10, connectButton, cancelButton);
         buttons.setAlignment(Pos.CENTER);
 
-        VBox centerContent = new VBox(16, title, subtitle, form, buttons, statusLabel);
-        centerContent.setAlignment(Pos.CENTER);
-        centerContent.setPadding(new Insets(40));
-        centerContent.getStyleClass().add("welcome-center");
+        VBox root = new VBox(16, title, form, buttons, statusLabel);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(40));
+        root.getStyleClass().add("welcome-center");
 
-        BorderPane root = new BorderPane();
-        root.setTop(navbar);
-        root.setCenter(centerContent);
 
-        Scene scene = new Scene(root, 1400, 700);
+        Scene scene = new Scene(root, 600, 400);
+
         var cssUrl = getClass().getResource("welcome.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }
 
-        stage.setTitle("Settings");
-        stage.setScene(scene);
-        stage.show();
+        dialogStage.setTitle("Update Connection");
+        dialogStage.setScene(scene);
+        dialogStage.showAndWait();
     }
 
-    private HBox buildNavbar() {
-        HBox navbar = new HBox(12);
-        navbar.setPadding(new Insets(10, 20, 10, 20));
-        navbar.setAlignment(Pos.CENTER_LEFT);
-        navbar.setStyle("-fx-background-color: #2b2b2b;");
 
-        Label navLabel = new Label("Welcome, " + username + "!");
-        navLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: white;");
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        navbar.getChildren().addAll(navLabel, spacer);
-        return navbar;
-    }
-
-    private void attemptReconnect() {
+    private void attemptReconnect(Stage dialogstage) {
         String url = urlField.getText().trim();
         String dbUser = dbUserField.getText().trim();
         String dbPassword = dbPasswordField.getText();
@@ -151,9 +134,17 @@ public class SettingsPage {
         connectTask.setOnSucceeded(e -> {
             connectButton.setDisable(false);
             cancelButton.setDisable(false);
+
             statusLabel.setTextFill(Color.GREEN);
             statusLabel.setText("Connected!");
-            new DataBrowserPage(username, connectTask.getValue(), schema).show(stage);
+
+            dialogstage.close();
+
+            new DataBrowserPage(
+                    username,
+                    connectTask.getValue(),
+                    schema
+            ).show(ownerStage);
         });
 
         connectTask.setOnFailed(e -> {
@@ -167,5 +158,7 @@ public class SettingsPage {
 
         new Thread(connectTask).start();
     }
+
+
 
 }

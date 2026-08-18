@@ -19,7 +19,7 @@ import dataexploreapp.filtering.FilterCondition;
 import dataexploreapp.filtering.FilterOperator;
 import java.io.File;
 import java.io.IOException;
-import dataexploreapp.pages.SettingsPage;
+
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import dataexploreapp.charts.ChartBuilder;
@@ -304,7 +304,7 @@ public class DataBrowserPage {
 
         // CENTER PANEL
         HBox paginationBar = buildPaginationBar();
-        VBox centerPanel = new VBox(10, resultsTable, paginationBar, chartArea);
+        VBox centerPanel = new VBox(10, resultsTable, paginationBar, statusLabel,chartArea);
 
         resultsTable.setMinHeight(400);
         chartArea.setMinHeight(600);
@@ -331,7 +331,7 @@ public class DataBrowserPage {
 
 
         // SCENE
-        Scene scene = new Scene(root, 1400, 800);
+        Scene scene = new Scene(root, 1530, 800);
 
         var cssUrl = getClass().getResource("databrowser.css");
 
@@ -380,7 +380,7 @@ public class DataBrowserPage {
 
         Button settingsBtn = new Button("Settings");
         settingsBtn.setStyle(navBtnStyle);
-        settingsBtn.setOnAction(e -> new SettingsPage(username, controller.getReader(), controller.getSchema()).show(stage));
+        settingsBtn.setOnAction(e -> new AccountPage(username, controller.getReader(), controller.getSchema()).show(stage));
 
         Button importBtn = new Button("Import file");
         importBtn.setStyle(navBtnStyle);
@@ -463,9 +463,7 @@ public class DataBrowserPage {
                 va, chartAggFunctionBox,
                 new Label("Series:"),
                 chartSeriesBox,
-                showChartBtn, saveChartBtn,
-                new Separator(),
-                statusLabel
+                showChartBtn, saveChartBtn
         );
         panel.setPadding(new Insets(10));
         panel.setPrefWidth(240);
