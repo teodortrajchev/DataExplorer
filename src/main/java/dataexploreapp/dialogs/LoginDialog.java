@@ -1,6 +1,7 @@
 package dataexploreapp.dialogs;
 
 import dataexploreapp.auth.AuthService;
+import dataexploreapp.db_config.save.ConnectionManager;
 import dataexploreapp.pages.ConnectionPage;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -101,17 +102,20 @@ public class LoginDialog {
             case SUCCESS -> {
                 messageLabel.setTextFill(Color.GREEN);
                 messageLabel.setText("Login Successful");
-                new ConnectionPage(userId).show(new Stage());
-                stage.close();
+
+                ConnectionManager.open(userId, stage);
             }
+
             case WRONG_PASSWORD -> {
                 messageLabel.setTextFill(Color.RED);
                 messageLabel.setText("Login Failed");
             }
+
             case USER_NOT_FOUND -> {
                 messageLabel.setTextFill(Color.RED);
                 messageLabel.setText("Username not found");
             }
+
             case DB_ERROR -> {
                 messageLabel.setTextFill(Color.RED);
                 messageLabel.setText("Database error");

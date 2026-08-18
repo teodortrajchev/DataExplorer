@@ -120,7 +120,6 @@ public class UpdateConnectionDialog {
         Task<DataBaseReader> connectTask = new Task<>() {
             @Override
             protected DataBaseReader call() throws Exception {
-                // Constructing DataBaseReader is what actually connects (HikariCP
                 // validates connectivity eagerly in its constructor), so it has to
                 // happen inside the Task — not before it's created — or a bad
                 // connection throws on the JavaFX Application Thread before

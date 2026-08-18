@@ -2,7 +2,10 @@ package dataexploreapp.pages;
 
 import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.auth.AuthService;
+import dataexploreapp.db_config.save.SavedConnection;
+import dataexploreapp.db_config.save.SavedConnectionService;
 import dataexploreapp.dialogs.LoginDialog;
+import dataexploreapp.encryption.PasswordEncryptionService;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,7 +26,11 @@ public class ConnectionPage {
     private final Button connectButton = new Button("Connect");
     private final TextField schemaField = new TextField();
     private Stage stage;
+    private final CheckBox saveConnectionCheckBox = new CheckBox("Save this connection");
 
+    private final CheckBox defaultConnectionCheckBox = new CheckBox("Use as default connection");
+
+    private final TextField connectionNameField = new TextField();
     public ConnectionPage(String username) {
         this.username = username;
     }
@@ -54,6 +61,27 @@ public class ConnectionPage {
         form.add(new Label("Schema:"), 0, 3);
         form.add(schemaField, 1, 3);
         schemaField.setPrefWidth(300);
+
+
+        saveConnectionCheckBox.setStyle("-fx-text-fill: white;");
+        defaultConnectionCheckBox.setStyle("-fx-text-fill: white;");
+
+        connectionNameField.setPromptText("Connection name");
+        saveConnectionCheckBox.setOnAction(e -> {
+            boolean enabled = saveConnectionCheckBox.isSelected();
+            connectionNameField.setDisable(!enabled);
+            defaultConnectionCheckBox.setDisable(!enabled);
+            if (!enabled) {
+                defaultConnectionCheckBox.setSelected(false);
+            }
+        });
+        connectionNameField.setDisable(true);
+        defaultConnectionCheckBox.setDisable(true);
+        form.add(new Label("Connection name:"), 0, 4);
+        form.add(connectionNameField, 1, 4);
+        form.add(saveConnectionCheckBox, 1, 5);
+        form.add(defaultConnectionCheckBox, 1, 6);
+
         form.add(dbUserField, 1, 1);
         form.add(new Label("Password:"), 0, 2);
         form.add(dbPasswordField, 1, 2);
@@ -134,9 +162,39 @@ public class ConnectionPage {
         };
 
         connectTask.setOnSucceeded(e -> {
+
             connectButton.setDisable(false);
+
             statusLabel.setTextFill(Color.GREEN);
             statusLabel.setText("Connected!");
+
+            if (saveConnectionCheckBox.isSelected()) {
+                String connectionName = connectionNameField.getText().trim();
+                if (connectionName.isEmpty()) {
+
+                    statusLabel.setTextFill(Color.RED);
+                    statusLabel.setText("Enter a name for the saved connection.");
+                    return;
+                }
+
+                try {
+                    String encryptedPassword = PasswordEncryptionService.encrypt(dbPassword);
+                    SavedConnection savedConnection = new SavedConnection(connectionName, username, url, dbUser, encryptedPassword, schema, defaultConnectionCheckBox.isSelected());
+                    SavedConnectionService.saveConnection(savedConnection);
+
+                    statusLabel.setText("Connected and connection saved!");
+
+                } catch (Exception ex) {
+
+                    statusLabel.setTextFill(Color.RED);
+
+                    statusLabel.setText("Connected, but failed to save connection.");
+
+                    ex.printStackTrace();
+
+                    return;
+                }
+            }
             new DataBrowserPage(username, connectTask.getValue(), schema).show(stage);
         });
 

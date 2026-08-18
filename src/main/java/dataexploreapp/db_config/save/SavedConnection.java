@@ -1,0 +1,81 @@
+package dataexploreapp.db_config.save;
+
+
+public class SavedConnection {
+
+    private String name;
+    private String applicationUser;
+    private String jdbcUrl;
+    private String databaseUser;
+    private String encryptedPassword;
+    private String schema;
+    private boolean defaultConnection;
+    public  SavedConnection(){
+
+    }
+    public SavedConnection(String name , String applicationUser, String jdbcUrl, String databaseUser, String encryptedPassword, String schema, boolean defaultConnection) {
+        this.name = name;
+        this.applicationUser = applicationUser;
+        this.jdbcUrl = jdbcUrl;
+        this.databaseUser = databaseUser;
+        this.encryptedPassword = encryptedPassword;
+        this.schema = schema;
+        this.defaultConnection = defaultConnection;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setApplicationUser(String applicationUser) {
+        this.applicationUser = applicationUser;
+    }
+
+    public void setDatabaseUser(String databaseUser) {
+        this.databaseUser = databaseUser;
+    }
+
+    public void setEncryptedPassword(String encryptedPassword) {
+        this.encryptedPassword = encryptedPassword;
+    }
+
+    public void setJdbcUrl(String jdbcUrl) {
+        this.jdbcUrl = jdbcUrl;
+    }
+
+    public void setDefaultConnection(boolean defaultConnection) {
+        this.defaultConnection = defaultConnection;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getApplicationUser() {
+        return applicationUser;
+    }
+
+    public String getJdbcUrl() {
+        return jdbcUrl;
+    }
+
+    public String getDatabaseUser() {
+        return databaseUser;
+    }
+
+    public String getEncryptedPassword() {
+        return encryptedPassword;
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public boolean isDefaultConnection() {
+        return defaultConnection;
+    }
+}
