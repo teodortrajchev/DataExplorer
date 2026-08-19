@@ -2,6 +2,8 @@ package dataexploreapp.pages;
 import dataexploreapp.aggregation.AggregationFunction;
 import dataexploreapp.controllers.DataBrowserController;
 import dataexploreapp.db_config.database.ForeignKeyInfo;
+import dataexploreapp.db_config.dataquality.DataQualityAnalyzer;
+import dataexploreapp.db_config.dataquality.DataQualityReport;
 import dataexploreapp.dialogs.ExportDialog;
 import dataexploreapp.dialogs.LoginDialog;
 import dataexploreapp.dialogs.ProceduresParamsDialog;
@@ -44,6 +46,24 @@ public class DataBrowserPage {
     @FunctionalInterface
     private interface PaginationCall {
         DataTable run() throws Exception;
+    }
+    private VBox createDataQualitySummary(int rowCount, double qualityScore, int duplicateRows, double missingPercentage, int invalidEmails) {
+        Label scoreLabel = new Label(String.format("Quality Score  %.0f%%", qualityScore));
+        ProgressBar progressBar = new ProgressBar(qualityScore / 100.0);
+        if (qualityScore >= 90) {
+            progressBar.getStyleClass().add("quality-good");
+        } else if (qualityScore >= 70) {
+            progressBar.getStyleClass().add("quality-warning");
+        } else {
+            progressBar.getStyleClass().add("quality-bad");
+        }
+
+        progressBar.setMaxWidth(Double.MAX_VALUE);
+        Label issuesLabel = new Label(String.format("%d duplicate rows  •  %.1f%% missing  •  %d invalid email addresses", duplicateRows, missingPercentage, invalidEmails));
+
+        VBox box = new VBox(8, scoreLabel, progressBar, issuesLabel);
+        box.setPadding(new Insets(12));
+        return box;
     }
     /** One row in the filter builder: column, operator, value(s), remove button. */
     private class FilterRowControls {
@@ -130,7 +150,7 @@ public class DataBrowserPage {
     private final Label statusLabel = new Label();
     private final BorderPane chartArea = new BorderPane();
     private final VBox foreignKeysBox = new VBox(6);
-
+    private final VBox dataQualityBox = new VBox(8);
     private final ComboBox<String> aggGroupColumnBox = new ComboBox<>();
     private final ComboBox<String> aggValueColumnBox = new ComboBox<>();
     private final ComboBox<AggregationFunction> aggFunctionBox =
@@ -280,7 +300,6 @@ public class DataBrowserPage {
         columnsPanel.setPrefWidth(240);
         columnsPanel.setPrefHeight(280);
 
-
         // LEFT SIDEBAR
         VBox leftPanel = new VBox(
                 10,
@@ -304,8 +323,11 @@ public class DataBrowserPage {
         leftScrollPane.setMaxWidth(260);
 
         // CENTER PANEL
+        dataQualityBox.setVisible(false);
+        dataQualityBox.setManaged(false);
         HBox paginationBar = buildPaginationBar();
-        VBox centerPanel = new VBox(10, resultsTable, paginationBar, statusLabel,chartArea);
+
+        VBox centerPanel = new VBox(10, dataQualityBox,resultsTable, paginationBar, statusLabel,chartArea);
 
         resultsTable.setMinHeight(400);
         chartArea.setMinHeight(600);
@@ -652,11 +674,39 @@ public class DataBrowserPage {
     /** Common tail for loadTableAsync/loadProcedureAsync: refresh pickers, render, or reapply history. */
     private void onFreshTableLoaded(ExportRecord historyRecord) {
         populateColumnPickers();
+
         if (historyRecord != null) {
             applyReapplyOutcome(controller.reapplyRecord(historyRecord));
         } else {
+
             renderTable(controller.getCurrentTable());
-            statusLabel.setText("Loaded " + controller.getCurrentTable().getRowCount() + " rows.");
+            DataTable table = controller.getCurrentTable();
+            List<Map<String, Object>> qualityRows = new ArrayList<>();
+
+            for (Object[] row : table.getRows()) {
+                Map<String, Object> rowMap = new LinkedHashMap<>();
+
+                for (int i = 0; i < table.getColumnNames().size(); i++) {
+                    rowMap.put(table.getColumnNames().get(i), row[i]);
+                }
+
+                qualityRows.add(rowMap);
+            }
+
+            DataQualityReport report = DataQualityAnalyzer.analyze(qualityRows);
+
+            dataQualityBox.getChildren().setAll(
+                    createDataQualitySummary(
+                            table.getRowCount(),
+                            report.getScore(),
+                            report.getDuplicateRows(),
+                            report.getMissingPercentage(),
+                            report.getInvalidEmails()
+                    ));
+
+            dataQualityBox.setVisible(true);
+            dataQualityBox.setManaged(true);
+            statusLabel.setText("Loaded " + table.getRowCount() + " rows.");
         }
     }
 
@@ -894,7 +944,8 @@ public class DataBrowserPage {
                 FXCollections.observableArrayList(original.getColumnNames());
 
         currentColumns.setAll(columns);
-        resetFilterRowsUI(); // rebuild filter row(s) against the newly loaded table's columns
+
+        resetFilterRowsUI();
 
         sortColumnBox.setItems(columns);
         chartCategoryBox.setItems(columns);
@@ -909,8 +960,19 @@ public class DataBrowserPage {
             sortColumnBox.getSelectionModel().selectFirst();
             chartCategoryBox.getSelectionModel().selectFirst();
         }
+        columnsBox.getChildren().clear();
+        columnCheckBoxes.clear();
 
-        // chart series checkboxes
+        for (String column : columns) {
+            CheckBox checkBox = new CheckBox(column);
+            // Show all columns by default
+            checkBox.setSelected(true);
+            columnCheckBoxes.put(column, checkBox);
+            columnsBox.getChildren().add(checkBox);
+            // Refresh table when checkbox changes
+            checkBox.setOnAction(e -> updateVisibleColumns());
+        }
+
         chartSeriesBox.getChildren().clear();
         chartSeriesCheckBoxes.clear();
 

@@ -14,6 +14,19 @@
     -fx-font-size: 14px;
     -fx-text-fill: #9ca3af;
 }
+.quality-good .bar {
+    -fx-background-color: #22c55e;
+}
+
+.quality-warning .bar {
+    -fx-background-color: #f59e0b;
+}
+
+.quality-bad .bar {
+    -fx-background-color: #ef4444;
+}
+
+
 /*Label{*/
 /*    -fx-text-fill: white;*/
 /*}*/
