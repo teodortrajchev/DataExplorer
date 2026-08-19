@@ -371,6 +371,21 @@ public class DataBaseReader {
 
         return table;
     }
+
+    public boolean schemaExists(String schemaOwner) throws SQLException {
+        String sql = "SELECT 1 FROM all_users WHERE username = ?";
+        logger.debug("Checking schema existence: {}", schemaOwner);
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, schemaOwner.toUpperCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                boolean exists = rs.next();
+                logger.info("Schema {} exists: {}", schemaOwner, exists);
+                return exists;
+            }
+        }
+    }
     public String getJdbcUrl() {
         return dataSource.getJdbcUrl();
     }

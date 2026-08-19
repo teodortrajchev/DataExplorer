@@ -38,8 +38,10 @@ public class ConnectionManager {
             protected DataBaseReader call() throws Exception {
 
                 String password = PasswordEncryptionService.decrypt(savedConnection.getEncryptedPassword());
+                String username = PasswordEncryptionService.decrypt(savedConnection.getApplicationUser());
+                String dbuser = PasswordEncryptionService.decrypt(savedConnection.getDatabaseUser());
 
-                DataBaseReader reader = new DataBaseReader(savedConnection.getJdbcUrl(), savedConnection.getDatabaseUser(), password);
+                DataBaseReader reader = new DataBaseReader(savedConnection.getJdbcUrl(), dbuser, password);
 
                 reader.testConnection();
 

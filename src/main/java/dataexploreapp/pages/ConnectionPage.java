@@ -15,6 +15,8 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.sql.SQLException;
+
 public class ConnectionPage {
 
     private final String username;
@@ -150,13 +152,13 @@ public class ConnectionPage {
         Task<DataBaseReader> connectTask = new Task<>() {
             @Override
             protected DataBaseReader call() throws Exception {
-                // Constructing DataBaseReader is what actually connects — HikariCP
-                // validates connectivity eagerly in its constructor — so this has
-                // to run inside the Task. If it ran before the Task was created,
-                // a bad connection would throw synchronously on the JavaFX
-                // Application Thread, before setOnFailed even exists to catch it.
                 DataBaseReader reader = new DataBaseReader(url, dbUser, dbPassword);
                 reader.testConnection();
+
+                if (!reader.schemaExists(schema)) {
+                    throw new SQLException("Schema \"" + schema + "\" does not exist or isn't visible to this account.");
+                }
+
                 return reader;
             }
         };
@@ -179,7 +181,9 @@ public class ConnectionPage {
 
                 try {
                     String encryptedPassword = PasswordEncryptionService.encrypt(dbPassword);
-                    SavedConnection savedConnection = new SavedConnection(connectionName, username, url, dbUser, encryptedPassword, schema, defaultConnectionCheckBox.isSelected());
+                    String encrypteduser = PasswordEncryptionService.encrypt(username);
+                    String encrypteddbuser=PasswordEncryptionService.encrypt(dbUser);
+                    SavedConnection savedConnection = new SavedConnection(connectionName, encrypteduser, url, encrypteddbuser, encryptedPassword, schema, defaultConnectionCheckBox.isSelected());
                     SavedConnectionService.saveConnection(savedConnection);
 
                     statusLabel.setText("Connected and connection saved!");

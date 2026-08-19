@@ -19,6 +19,8 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.sql.SQLException;
+
 public class UpdateConnectionDialog {
 
     private final String username;
@@ -120,12 +122,13 @@ public class UpdateConnectionDialog {
         Task<DataBaseReader> connectTask = new Task<>() {
             @Override
             protected DataBaseReader call() throws Exception {
-                // validates connectivity eagerly in its constructor), so it has to
-                // happen inside the Task — not before it's created — or a bad
-                // connection throws on the JavaFX Application Thread before
-                // setOnFailed exists to catch it.
                 DataBaseReader newReader = new DataBaseReader(url, dbUser, dbPassword);
                 newReader.testConnection();
+
+                if (!newReader.schemaExists(schema)) {
+                    throw new SQLException("Schema \"" + schema + "\" does not exist or isn't visible to this account.");
+                }
+
                 return newReader;
             }
         };
