@@ -1,9 +1,13 @@
 package dataexploreapp.db_config.save;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -108,5 +112,21 @@ public class SavedConnectionService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete saved connection.", e);
         }
+    }
+    public static void change_default(String name) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        File file = CONNECTIONS_FILE.toFile();
+        // Read JSON
+        ArrayNode connections = (ArrayNode) mapper.readTree(file);
+        for (JsonNode node : connections) {
+            ObjectNode connection = (ObjectNode) node;
+            if (connection.get("name").asText().equals(name)) {
+                connection.put("defaultConnection", true);
+            } else {
+                connection.put("defaultConnection", false);
+            }
+        }
+        mapper.writerWithDefaultPrettyPrinter()
+                .writeValue(file, connections);
     }
 }

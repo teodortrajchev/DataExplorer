@@ -1,6 +1,8 @@
 package dataexploreapp.db_config.save;
 
 
+import dataexploreapp.encryption.PasswordEncryptionService;
+
 public class SavedConnection {
 
     private String name;
@@ -56,7 +58,11 @@ public class SavedConnection {
     }
 
     public String getApplicationUser() {
-        return applicationUser;
+        try {
+            return PasswordEncryptionService.decrypt(applicationUser);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String getJdbcUrl() {

@@ -1,5 +1,6 @@
 package dataexploreapp.pages;
 
+import dataexploreapp.controllers.DataBrowserController;
 import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.auth.AuthService;
 import dataexploreapp.db_config.save.SavedConnection;
@@ -29,6 +30,7 @@ public class ConnectionPage {
     private final TextField schemaField = new TextField();
     private Stage stage;
     private final CheckBox saveConnectionCheckBox = new CheckBox("Save this connection");
+    private final Button logoutBtn = new Button("Logout");
 
     private final CheckBox defaultConnectionCheckBox = new CheckBox("Use as default connection");
 
@@ -127,13 +129,19 @@ public class ConnectionPage {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        String navBtnStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;";
 
 
-        navbar.getChildren().addAll(navLabel, spacer);
-        return navbar;
+
+        Button logoutBtn = new Button("Logout");
+        logoutBtn.setStyle(navBtnStyle);
+        logoutBtn.setOnAction(e -> {
+            new LoginDialog(new AuthService()).show(new Stage());
+            stage.close();
+        });
+
+        navbar.getChildren().addAll( spacer,logoutBtn);        return navbar;
     }
-
-
     private void attemptConnect() {
         String url = urlField.getText().trim();
         String dbUser = dbUserField.getText().trim();

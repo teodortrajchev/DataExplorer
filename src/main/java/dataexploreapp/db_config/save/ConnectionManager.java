@@ -1,5 +1,9 @@
 package dataexploreapp.db_config.save;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.encryption.PasswordEncryptionService;
 import dataexploreapp.pages.ConnectionPage;
@@ -9,6 +13,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 
 public class ConnectionManager {
@@ -19,7 +25,7 @@ public class ConnectionManager {
     public static void open(String username, Stage stage) {
 
         Optional<SavedConnection> defaultConnection = SavedConnectionService.getDefaultConnection(username);
-
+        System.out.println(defaultConnection.isPresent());
         if (defaultConnection.isEmpty()) {
 
             new ConnectionPage(username).show(stage);
@@ -38,7 +44,6 @@ public class ConnectionManager {
             protected DataBaseReader call() throws Exception {
 
                 String password = PasswordEncryptionService.decrypt(savedConnection.getEncryptedPassword());
-                String username = PasswordEncryptionService.decrypt(savedConnection.getApplicationUser());
                 String dbuser = PasswordEncryptionService.decrypt(savedConnection.getDatabaseUser());
 
                 DataBaseReader reader = new DataBaseReader(savedConnection.getJdbcUrl(), dbuser, password);

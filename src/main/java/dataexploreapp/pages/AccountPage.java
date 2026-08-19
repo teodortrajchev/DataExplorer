@@ -2,22 +2,27 @@ package dataexploreapp.pages;
 
 import dataexploreapp.auth.AuthService;
 import dataexploreapp.db_config.database.DataBaseReader;
+import dataexploreapp.db_config.save.ConnectionManager;
+import dataexploreapp.db_config.save.SavedConnection;
+import dataexploreapp.db_config.save.SavedConnectionService;
 import dataexploreapp.dialogs.LoginDialog;
 import dataexploreapp.dialogs.UpdateConnectionDialog;
 import io.github.cdimascio.dotenv.Dotenv;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class AccountPage {
@@ -30,7 +35,6 @@ public class AccountPage {
     private final Button updateButton = new Button("Update Database");
     private final Button homeButton = new Button("Home");
     private final Button logoutBtn = new Button("Logout");
-
     private Stage stage;
 
     public AccountPage(String username, DataBaseReader currentReader, String currentSchema) {
@@ -39,11 +43,25 @@ public class AccountPage {
         this.currentSchema = currentSchema;
     }
 
+
     public void show(Stage stage) throws SQLException {
         this.stage = stage;
 
         String sql = "SELECT created_at FROM "+dotenv.get("APP_USERS_TABLE")+" WHERE username = '" + username + "'";
 
+        ComboBox<String> comboBox = new ComboBox<>();
+        comboBox.getItems().setAll(getSavedConnections());
+        Button setdefault=new Button("Set Default");
+        setdefault.setOnAction(e -> {
+           String v=comboBox.getValue();
+            try {
+                SavedConnectionService.change_default(v);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        setdefault.setText("Set Default Connection");
+        setdefault.getStyleClass().add("primary-button");
         java.util.List<Object[]> rows = currentReader.runQuery(sql).getRows();
         String created_at = "";
         if (!rows.isEmpty()) {
@@ -78,7 +96,8 @@ public class AccountPage {
 
         VBox createdBox = new VBox(5, createdLabel, createdAtValue);
 
-        VBox information = new VBox(25, usernameBox, createdBox, updateButton);
+        VBox information = new VBox(25, usernameBox, createdBox, updateButton,comboBox,setdefault);
+
 
         information.setAlignment(Pos.CENTER_LEFT);
         information.setPadding(new Insets(30));
@@ -138,6 +157,15 @@ public class AccountPage {
         navbar.getChildren().addAll(homeButton, spacer,logoutBtn);
         return navbar;
     }
+    private List<String> getSavedConnections(){
+        List<SavedConnection> conns=SavedConnectionService.loadConnections();
+        List<String> con_names=new ArrayList<>();
+        for(SavedConnection s: conns){
+            con_names.add(s.getName());
+        }
+        return con_names;
+    }
+
 
 
 }
