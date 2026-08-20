@@ -50,3 +50,9 @@
 .primary-button:pressed {
     -fx-background-color: #1d4ed8;
 }
+
+.details-panel {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 0 0 0 1;
+}

@@ -26,6 +26,10 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import dataexploreapp.charts.ChartBuilder;
 import dataexploreapp.history.ExportRecord;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -36,7 +40,9 @@ import javafx.scene.Scene;
 import javafx.scene.chart.Chart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -151,6 +157,14 @@ public class DataBrowserPage {
     private final BorderPane chartArea = new BorderPane();
     private final VBox foreignKeysBox = new VBox(6);
     private final VBox dataQualityBox = new VBox(8);
+
+    // Slide-out "details" panel (columns + related tables), hidden until a
+    // table/procedure is selected.
+    private static final double DETAILS_PANEL_WIDTH = 260;
+    private final VBox detailsPanel = new VBox(14);
+    private final StackPane detailsPanelWrapper = new StackPane(detailsPanel);
+    private final Label detailsPanelTitle = new Label("Select a table or procedure");
+    private boolean detailsPanelOpen = false;
     private final ComboBox<String> aggGroupColumnBox = new ComboBox<>();
     private final ComboBox<String> aggValueColumnBox = new ComboBox<>();
     private final ComboBox<AggregationFunction> aggFunctionBox =
@@ -192,6 +206,7 @@ public class DataBrowserPage {
             String selected = tableList.getSelectionModel().getSelectedItem();
 
             if (selected != null) {
+                openDetailsPanel(selected);
                 loadTableAsync(selected, null);
             }
         });
@@ -213,6 +228,7 @@ public class DataBrowserPage {
             String selected = procedureList.getSelectionModel().getSelectedItem();
 
             if (selected != null) {
+                openDetailsPanel(selected);
                 promptAndLoadProcedureAsync(selected, null);
             }
         });
@@ -300,13 +316,41 @@ public class DataBrowserPage {
         columnsPanel.setPrefWidth(240);
         columnsPanel.setPrefHeight(280);
 
-        // LEFT SIDEBAR
+        // DETAILS PANEL (columns + related tables) - slides out once a table
+        // or procedure is selected instead of always taking up sidebar space.
+        detailsPanelTitle.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px;");
+        detailsPanelTitle.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(detailsPanelTitle, Priority.ALWAYS);
+
+        Button closeDetailsBtn = new Button("×");
+        closeDetailsBtn.setStyle("-fx-background-color: transparent; -fx-font-size: 16px; -fx-cursor: hand;");
+        closeDetailsBtn.setOnAction(e -> closeDetailsPanel());
+
+        HBox detailsPanelHeader = new HBox(8, detailsPanelTitle, closeDetailsBtn);
+        detailsPanelHeader.setAlignment(Pos.CENTER_LEFT);
+        detailsPanelHeader.setPadding(new Insets(10, 10, 0, 10));
+
+        detailsPanel.getChildren().addAll(detailsPanelHeader, columnsPanel, foreignKeysPanel);
+        detailsPanel.getStyleClass().add("details-panel");
+        detailsPanel.setPrefWidth(DETAILS_PANEL_WIDTH);
+        detailsPanel.setMinWidth(DETAILS_PANEL_WIDTH);
+        detailsPanel.setMaxWidth(DETAILS_PANEL_WIDTH);
+
+        detailsPanelWrapper.setAlignment(Pos.TOP_LEFT);
+        detailsPanelWrapper.setPrefWidth(0);
+        detailsPanelWrapper.setMinWidth(0);
+        detailsPanelWrapper.setMaxWidth(0);
+
+        Rectangle detailsClip = new Rectangle();
+        detailsClip.widthProperty().bind(detailsPanelWrapper.widthProperty());
+        detailsClip.heightProperty().bind(detailsPanelWrapper.heightProperty());
+        detailsPanelWrapper.setClip(detailsClip);
+
+        // LEFT SIDEBAR (navigation only - tables & procedures)
         VBox leftPanel = new VBox(
                 10,
                 tablesPanel,
-                proceduresPanel,
-                columnsPanel,
-                foreignKeysPanel
+                proceduresPanel
         );
 
         leftPanel.setPadding(new Insets(10));
@@ -321,6 +365,10 @@ public class DataBrowserPage {
         leftScrollPane.setPrefWidth(260);
         leftScrollPane.setMinWidth(260);
         leftScrollPane.setMaxWidth(260);
+
+        // Nav sidebar + sliding details panel, side by side
+        HBox sidebarArea = new HBox(leftScrollPane, detailsPanelWrapper);
+        sidebarArea.setFillHeight(true);
 
         // CENTER PANEL
         dataQualityBox.setVisible(false);
@@ -346,7 +394,7 @@ public class DataBrowserPage {
         BorderPane root = new BorderPane();
 
         root.setTop(buildNavbar());
-        root.setLeft(leftScrollPane);
+        root.setLeft(sidebarArea);
         root.setRight(buildControlsScrollPane());
         root.setCenter(centerScrollPane);
 
@@ -500,6 +548,34 @@ public class DataBrowserPage {
         panel.setMaxWidth(Double.MAX_VALUE);
 
         return panel;
+    }
+
+    // --- Details panel slide animation -----------------------------------------
+
+    /** Slides the columns/related-tables panel open and labels it with the current selection. */
+    private void openDetailsPanel(String selectionName) {
+        detailsPanelTitle.setText(selectionName);
+        if (detailsPanelOpen) return;
+        detailsPanelOpen = true;
+        animateDetailsPanel(DETAILS_PANEL_WIDTH);
+    }
+
+    /** Slides the columns/related-tables panel closed. */
+    private void closeDetailsPanel() {
+        if (!detailsPanelOpen) return;
+        detailsPanelOpen = false;
+        animateDetailsPanel(0);
+    }
+
+    private void animateDetailsPanel(double targetWidth) {
+        Timeline slide = new Timeline(
+                new KeyFrame(Duration.millis(250),
+                        new KeyValue(detailsPanelWrapper.prefWidthProperty(), targetWidth, Interpolator.EASE_BOTH),
+                        new KeyValue(detailsPanelWrapper.minWidthProperty(), targetWidth, Interpolator.EASE_BOTH),
+                        new KeyValue(detailsPanelWrapper.maxWidthProperty(), targetWidth, Interpolator.EASE_BOTH)
+                )
+        );
+        slide.play();
     }
 
     // --- Async wrappers around the controller ---------------------------------
