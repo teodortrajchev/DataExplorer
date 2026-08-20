@@ -60,6 +60,10 @@ public class LoginDialog {
         passwordField.setOnAction(e -> attemptLogin());
 
         Scene scene = new Scene(grid, 380, 260);
+        var cssUrl = getClass().getResource("/dataexploreapp/pages/global.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
         stage.setTitle("Login");
         stage.setScene(scene);
         stage.show();

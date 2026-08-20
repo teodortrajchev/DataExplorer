@@ -70,7 +70,13 @@ public class ProceduresParamsDialog {
         VBox root = new VBox(16, title, grid, buttons);
         root.setPadding(new Insets(20));
 
-        dialogStage.setScene(new Scene(root, 380, 120 + inputParams.size() * 40));
+
+        Scene scene =new Scene(root, 380, 120 + inputParams.size() * 40);
+        var cssUrl = ProceduresParamsDialog.class.getResource("/dataexploreapp/pages/global.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
+        dialogStage.setScene(scene);
         dialogStage.showAndWait();
 
         return Optional.ofNullable(result[0]);

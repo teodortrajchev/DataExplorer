@@ -90,11 +90,11 @@ public class UpdateConnectionDialog {
 
 
         Scene scene = new Scene(root, 600, 400);
-
-        var cssUrl = getClass().getResource("welcome.css");
+        var cssUrl = UpdateConnectionDialog.class.getResource("/dataexploreapp/pages/global.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }
+
 
         dialogStage.setTitle("Update Connection");
         dialogStage.setScene(scene);

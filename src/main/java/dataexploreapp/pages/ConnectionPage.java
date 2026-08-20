@@ -107,7 +107,7 @@ public class ConnectionPage {
         root.setCenter(centerContent);
 
         Scene scene = new Scene(root, 1400, 700);
-        var cssUrl = getClass().getResource("welcome.css");
+        var cssUrl = getClass().getResource("global.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }

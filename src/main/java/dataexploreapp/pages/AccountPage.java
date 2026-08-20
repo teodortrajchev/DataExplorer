@@ -8,6 +8,7 @@ import dataexploreapp.db_config.save.SavedConnectionService;
 import dataexploreapp.dialogs.LoginDialog;
 import dataexploreapp.dialogs.UpdateConnectionDialog;
 import io.github.cdimascio.dotenv.Dotenv;
+import javafx.animation.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -17,7 +18,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.*;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -54,10 +57,14 @@ public class AccountPage {
         comboBox.setPromptText("Choose a saved connection");
         comboBox.setMaxWidth(Double.MAX_VALUE);
         Button setdefault=new Button("Set Default");
+        StackPane checkAnimation = createCheckAnimation();
+        checkAnimation.setVisible(false);
+        checkAnimation.setManaged(false);
         setdefault.setOnAction(e -> {
-            String v=comboBox.getValue();
+            String v = comboBox.getValue();
             try {
                 SavedConnectionService.change_default(v);
+                playCheckAnimation(checkAnimation);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -105,8 +112,9 @@ public class AccountPage {
         Label connectionSectionLabel = new Label("Saved connection");
         connectionSectionLabel.getStyleClass().add("section-label");
 
-        VBox connectionBox = new VBox(10, connectionSectionLabel, comboBox, setdefault);
-
+        HBox defaultRow = new HBox(10, setdefault, checkAnimation);
+        defaultRow.setAlignment(Pos.CENTER_LEFT);
+        VBox connectionBox = new VBox(10, connectionSectionLabel, comboBox, defaultRow);
         VBox information = new VBox(22, usernameBox, createdBox, divider, updateButton, connectionBox);
 
         information.setAlignment(Pos.CENTER_LEFT);
@@ -129,7 +137,7 @@ public class AccountPage {
 
         Scene scene = new Scene(root, 1530, 800);
 
-        var cssUrl = getClass().getResource("accountpage.css");
+        var cssUrl = getClass().getResource("global.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }
@@ -168,6 +176,71 @@ public class AccountPage {
         return con_names;
     }
 
+    private StackPane createCheckAnimation() {
 
+        Circle circle = new Circle(14);
+        circle.setFill(Color.web("#22c55e"));
+
+        Path check = new Path(
+                new MoveTo(-7, 0),
+                new LineTo(-2, 5),
+                new LineTo(7, -6)
+        );
+
+        check.setFill(null);
+        check.setStroke(Color.WHITE);
+        check.setStrokeWidth(2.5);
+        check.setStrokeLineCap(StrokeLineCap.ROUND);
+        check.setStrokeLineJoin(StrokeLineJoin.ROUND);
+
+        check.getStrokeDashArray().addAll(30.0, 30.0);
+        check.setStrokeDashOffset(30);
+
+        StackPane container = new StackPane(circle, check);
+
+        container.setMinSize(28, 28);
+        container.setPrefSize(28, 28);
+        container.setMaxSize(28, 28);
+
+        return container;
+    }
+
+
+    private void playCheckAnimation(StackPane container) {
+
+        container.setManaged(true);
+        container.setVisible(true);
+
+        container.setOpacity(0);
+        container.setScaleX(0.6);
+        container.setScaleY(0.6);
+
+        Path check = (Path) container.getChildren().get(1);
+
+        check.setStrokeDashOffset(30);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(180), container);
+
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        ScaleTransition scale = new ScaleTransition(Duration.millis(350), container);
+
+        scale.setFromX(0.6);
+        scale.setFromY(0.6);
+        scale.setToX(1);
+        scale.setToY(1);
+        scale.setInterpolator(Interpolator.EASE_OUT);
+
+        Timeline drawCheck = new Timeline(
+                new KeyFrame(Duration.ZERO,
+                new KeyValue(check.strokeDashOffsetProperty(), 30)),
+                new KeyFrame(Duration.millis(350),
+                        new KeyValue(check.strokeDashOffsetProperty(), 0, Interpolator.EASE_OUT)));
+
+        ParallelTransition animation = new ParallelTransition(fade, scale, drawCheck);
+
+        animation.play();
+    }
 
 }

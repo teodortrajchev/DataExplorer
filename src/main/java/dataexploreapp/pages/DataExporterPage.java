@@ -425,7 +425,10 @@ public class DataExporterPage {
 
 
         Scene scene = new Scene(root, 1000, 750);
-
+        var cssUrl = getClass().getResource("global.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
 
         stage.setTitle("Data Exporter");
         stage.setScene(scene);
