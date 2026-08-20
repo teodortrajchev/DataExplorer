@@ -55,6 +55,7 @@ public class DataBrowserPage {
     }
     private VBox createDataQualitySummary(int rowCount, double qualityScore, int duplicateRows, double missingPercentage, int invalidEmails) {
         Label scoreLabel = new Label(String.format("Quality Score  %.0f%%", qualityScore));
+        scoreLabel.getStyleClass().add("section-label");
         ProgressBar progressBar = new ProgressBar(qualityScore / 100.0);
         if (qualityScore >= 90) {
             progressBar.getStyleClass().add("quality-good");
@@ -66,8 +67,10 @@ public class DataBrowserPage {
 
         progressBar.setMaxWidth(Double.MAX_VALUE);
         Label issuesLabel = new Label(String.format("%d duplicate rows  •  %.1f%% missing  •  %d invalid email addresses", duplicateRows, missingPercentage, invalidEmails));
+        issuesLabel.getStyleClass().add("muted-label");
 
         VBox box = new VBox(8, scoreLabel, progressBar, issuesLabel);
+        box.getStyleClass().add("panel-card");
         box.setPadding(new Insets(12));
         return box;
     }
@@ -96,7 +99,7 @@ public class DataBrowserPage {
 
             Button removeBtn = new Button("X");
             removeBtn.setOnAction(e -> removeFilterRow(this));
-            removeBtn.setStyle("-fx-text-fill:red;");
+            removeBtn.getStyleClass().add("remove-button");
             removeBtn.setMinWidth(25);
             removeBtn.setPrefWidth(25);
             removeBtn.setMaxWidth(25);
@@ -193,9 +196,11 @@ public class DataBrowserPage {
         // TABLES PANEL
         Label tablesLabel = new Label("Tables");
         tablesLabel.setMinHeight(25);
-        tablesLabel.setStyle("-fx-text-fill: black;");
+        tablesLabel.getStyleClass().add("section-label");
 
         VBox tablesPanel = new VBox(8, tablesLabel, tableList);
+        tableList.getStyleClass().add("sidebar-list");
+        tablesPanel.getStyleClass().add("panel-card");
         tablesPanel.setPadding(new Insets(10));
         tablesPanel.setPrefWidth(200);
         tablesPanel.setPrefHeight(250);
@@ -215,9 +220,11 @@ public class DataBrowserPage {
         // PROCEDURES PANEL
         Label proceduresLabel = new Label("Procedures");
         proceduresLabel.setMinHeight(25);
-        proceduresLabel.setStyle("-fx-text-fill: black;");
+        proceduresLabel.getStyleClass().add("section-label");
 
         VBox proceduresPanel = new VBox(8, proceduresLabel, procedureList);
+        procedureList.getStyleClass().add("sidebar-list");
+        proceduresPanel.getStyleClass().add("panel-card");
         proceduresPanel.setPadding(new Insets(10));
         proceduresPanel.setPrefWidth(200);
         proceduresPanel.setPrefHeight(180);
@@ -237,7 +244,7 @@ public class DataBrowserPage {
         // COLUMNS PANEL
         Label columnsLabel = new Label("Columns");
         columnsLabel.setMinHeight(25);
-        columnsLabel.setStyle("-fx-text-fill: black;");
+        columnsLabel.getStyleClass().add("section-label");
 
         columnsBox.setPadding(new Insets(10));
         columnsBox.setPrefWidth(220);
@@ -261,7 +268,7 @@ public class DataBrowserPage {
         foreignKeysBox.setPrefWidth(220);
 
         Label relatedTablesLabel = new Label("Related tables");
-        relatedTablesLabel.setStyle("-fx-text-fill: black;");
+        relatedTablesLabel.getStyleClass().add("section-label");
         relatedTablesLabel.setMinHeight(25);
 
         VBox foreignKeysPanel = new VBox(
@@ -270,6 +277,7 @@ public class DataBrowserPage {
                 fkScroll
         );
 
+        foreignKeysPanel.getStyleClass().add("panel-card");
         foreignKeysPanel.setPadding(new Insets(10));
         foreignKeysPanel.setPrefWidth(240);
         foreignKeysPanel.setPrefHeight(220);
@@ -312,18 +320,19 @@ public class DataBrowserPage {
                 columnsScroll
         );
 
+        columnsPanel.getStyleClass().add("panel-card");
         columnsPanel.setPadding(new Insets(10));
         columnsPanel.setPrefWidth(240);
         columnsPanel.setPrefHeight(280);
 
         // DETAILS PANEL (columns + related tables) - slides out once a table
         // or procedure is selected instead of always taking up sidebar space.
-        detailsPanelTitle.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px;");
+        detailsPanelTitle.getStyleClass().add("section-label");
         detailsPanelTitle.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(detailsPanelTitle, Priority.ALWAYS);
 
         Button closeDetailsBtn = new Button("×");
-        closeDetailsBtn.setStyle("-fx-background-color: transparent; -fx-font-size: 16px; -fx-cursor: hand;");
+        closeDetailsBtn.getStyleClass().add("icon-button");
         closeDetailsBtn.setOnAction(e -> closeDetailsPanel());
 
         HBox detailsPanelHeader = new HBox(8, detailsPanelTitle, closeDetailsBtn);
@@ -378,9 +387,12 @@ public class DataBrowserPage {
         VBox centerPanel = new VBox(10, dataQualityBox,resultsTable, paginationBar, statusLabel,chartArea);
 
         resultsTable.setMinHeight(400);
+        chartArea.getStyleClass().add("panel-card");
         chartArea.setMinHeight(600);
         chartArea.setPrefHeight(600);
         chartArea.setMaxWidth(Double.MAX_VALUE);
+
+        statusLabel.getStyleClass().add("status-label");
 
 
         centerPanel.setPadding(new Insets(10));
@@ -431,26 +443,24 @@ public class DataBrowserPage {
         HBox navbar = new HBox(12);
         navbar.setPadding(new Insets(10, 20, 10, 20));
         navbar.setAlignment(Pos.CENTER_LEFT);
-        navbar.setStyle("-fx-background-color: #2b2b2b;");
+        navbar.getStyleClass().add("navbar");
 
         Label navLabel = new Label("Welcome, " + username + "!");
-        navLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: white;");
+        navLabel.getStyleClass().add("nav-title");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        String navBtnStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;";
-
         Button historyBtn = new Button("History");
-        historyBtn.setStyle(navBtnStyle);
+        historyBtn.getStyleClass().add("nav-button");
         historyBtn.setOnAction(e -> new ExportHistoryPage(this).show(new Stage()));
 
         Button exportBtn = new Button("Export data");
-        exportBtn.setStyle(navBtnStyle);
+        exportBtn.getStyleClass().add("nav-button");
         exportBtn.setOnAction(e -> openExportDialog());
 
         Button settingsBtn = new Button("Account");
-        settingsBtn.setStyle(navBtnStyle);
+        settingsBtn.getStyleClass().add("nav-button");
         settingsBtn.setOnAction(e -> {
             try {
                 new AccountPage(username, controller.getReader(), controller.getSchema()).show(stage);
@@ -460,18 +470,18 @@ public class DataBrowserPage {
         });
 
         Button importBtn = new Button("Import file");
-        importBtn.setStyle(navBtnStyle);
+        importBtn.getStyleClass().add("nav-button");
         importBtn.setOnAction(e -> chooseAndImportFile());
 
         Button queryBtn = new Button("Run query");
-        queryBtn.setStyle(navBtnStyle);
+        queryBtn.getStyleClass().add("nav-button");
         queryBtn.setOnAction(e -> {
             Optional<String> query = RunQueryDialog.show(stage);
             query.ifPresent(this::runQueryAsync);
         });
 
         Button logoutBtn = new Button("Logout");
-        logoutBtn.setStyle(navBtnStyle);
+        logoutBtn.getStyleClass().add("nav-button");
         logoutBtn.setOnAction(e -> {
             new LoginDialog(new AuthService()).show(new Stage());
             stage.close();
@@ -513,15 +523,15 @@ public class DataBrowserPage {
         applySortBtn.setOnAction(e -> applySort());
 
         Label filter=new Label("Filter:");
-        filter.setStyle("-fx-text-fill: black;");
+        filter.getStyleClass().add("section-label");
         Label sort=new Label("Sort:");
-        sort.setStyle("-fx-text-fill: black;");
+        sort.getStyleClass().add("section-label");
         Label aggregate=new Label("Aggregate:");
-        aggregate.setStyle("-fx-text-fill: black;");
+        aggregate.getStyleClass().add("section-label");
         Label chart=new Label("Chart:");
-        chart.setStyle("-fx-text-fill: black;");
+        chart.getStyleClass().add("section-label");
         Label va=new Label("Value / Aggregation:");
-        va.setStyle("-fx-text-fill: black;");
+        va.getStyleClass().add("section-label");
         VBox filterSection = new VBox(6,
                 filter,
                 new HBox(8, new Label("Combine with:"), filterCombinatorBox),

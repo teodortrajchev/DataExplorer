@@ -1,6 +1,12 @@
+/*
+   background : #0f172a   panel/card : #1e293b   border : #334155
+   text       : #e2e8f0   muted text : #94a3b8   accent : #3b82f6
+ */
+
 .axis-label {
-    -fx-text-fill: black;
+    -fx-text-fill: -fx-text-base-color;
 }
+
 .welcome-center {
     -fx-background-color: linear-gradient(to bottom right, #1f2937, #111827);
 }
@@ -10,10 +16,12 @@
     -fx-font-weight: bold;
     -fx-text-fill: white;
 }
+
 .welcome-subtitle {
     -fx-font-size: 14px;
     -fx-text-fill: #9ca3af;
 }
+
 .quality-good .bar {
     -fx-background-color: #22c55e;
 }
@@ -26,13 +34,55 @@
     -fx-background-color: #ef4444;
 }
 
-
-/*Label{*/
-/*    -fx-text-fill: white;*/
-/*}*/
 .text-field, .password-field {
-    -fx-prompt-text-fill: #4b5563;
+    -fx-prompt-text-fill: #64748b;
 }
+
+/* ---- Global theme base -------------------------------------------------
+   Driving Modena's built-in color derivation keeps every stock control
+   (ComboBox, ListView, TableView, ScrollPane, CheckBox, TextField...)
+   consistent with the palette without having to hand-style each one. */
+.root {
+    -fx-base: #1e293b;
+    -fx-background: #0f172a;
+    -fx-control-inner-background: #16202f;
+    -fx-control-inner-background-alt: #182234;
+    -fx-accent: #3b82f6;
+    -fx-focus-color: #3b82f6;
+    -fx-faint-focus-color: #3b82f633;
+    -fx-text-base-color: #e2e8f0;
+    -fx-text-fill: #e2e8f0;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* ---- Buttons ------------------------------------------------------------ */
+.button {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #e2e8f0;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-padding: 6 14 6 14;
+    -fx-cursor: hand;
+}
+.button:hover {
+    -fx-background-color: #263349;
+    -fx-border-color: #3b82f6;
+}
+.button:pressed {
+    -fx-background-color: #17202f;
+}
+.button:default {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+}
+.button:default:hover {
+    -fx-background-color: #2563eb;
+}
+
 .primary-button {
     -fx-background-color: #3b82f6;
     -fx-text-fill: white;
@@ -40,19 +90,176 @@
     -fx-font-weight: bold;
     -fx-padding: 12 32 12 32;
     -fx-background-radius: 8;
+    -fx-border-color: transparent;
     -fx-cursor: hand;
 }
-
 .primary-button:hover {
     -fx-background-color: #2563eb;
 }
-
 .primary-button:pressed {
     -fx-background-color: #1d4ed8;
 }
 
+.remove-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #f87171;
+    -fx-text-fill: #f87171;
+    -fx-padding: 0;
+    -fx-font-size: 11px;
+    -fx-alignment: CENTER;
+    -fx-content-display: CENTER;
+}
+.remove-button:hover {
+    -fx-background-color: #f8717122;
+}
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-padding: 2 8 2 8;
+}
+.icon-button:hover {
+    -fx-text-fill: #e2e8f0;
+    -fx-background-color: #33415522;
+    -fx-background-radius: 4;
+}
+
+/* ---- Navbar --------------------------------------------------------------- */
+.navbar {
+    -fx-background-color: #111827;
+    -fx-border-color: transparent transparent #334155 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.nav-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f1f5f9;
+}
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-background-radius: 6;
+}
+.nav-button:hover {
+    -fx-text-fill: white;
+    -fx-background-color: #1e293b;
+}
+
+/* ---- Sidebar / panel cards ------------------------------------------------ */
+.panel-card {
+    -fx-background-color: #131c2b;
+    -fx-background-radius: 8;
+    -fx-border-color: #263349;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.section-label {
+    -fx-text-fill: #f1f5f9;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.muted-label {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 12px;
+}
+
+.status-label {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 12px;
+}
+
 .details-panel {
-    -fx-background-color: #f9fafb;
-    -fx-border-color: #e5e7eb;
+    -fx-background-color: #131c2b;
+    -fx-border-color: #263349;
     -fx-border-width: 0 0 0 1;
+}
+
+/* ---- Table -------------------------------------------------------------- */
+.table-view {
+    -fx-background-color: #131c2b;
+    -fx-background-radius: 8;
+    -fx-border-color: #263349;
+    -fx-border-radius: 8;
+    -fx-table-cell-border-color: #263349;
+}
+.table-view .column-header-background {
+    -fx-background-color: #1e293b;
+    -fx-background-radius: 8 8 0 0;
+}
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #334155 transparent;
+    -fx-size: 34;
+}
+.table-view .column-header .label {
+    -fx-text-fill: #cbd5e1;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
+.table-row-cell {
+    -fx-background-color: #131c2b;
+    -fx-text-fill: #e2e8f0;
+}
+.table-row-cell:odd {
+    -fx-background-color: #16202f;
+}
+.table-row-cell:selected {
+    -fx-background-color: #3b82f64d;
+    -fx-text-fill: white;
+}
+.table-row-cell:hover {
+    -fx-background-color: #1c2740;
+}
+
+/* ---- Scroll panes ---------------------------------------------------------- */
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Tables/Procedures sidebar lists - blend into their panel-card background */
+.sidebar-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.sidebar-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-padding: 6 8 6 8;
+}
+.sidebar-list .list-cell:filled:hover {
+    -fx-background-color: #1c2740;
+}
+.sidebar-list .list-cell:filled:selected {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+}
+
+/* ComboBox dropdown popups - must stay fully opaque, they float above other
+   content so a transparent background makes them see-through. */
+.combo-box-popup .list-view {
+    -fx-background-color: #1e293b;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-background-insets: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 12, 0, 0, 4);
+}
+.combo-box-popup .list-cell {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #e2e8f0;
+    -fx-padding: 6 10 6 10;
+}
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #2c3d59;
+}
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
 }
