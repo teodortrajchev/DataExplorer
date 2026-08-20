@@ -51,9 +51,11 @@ public class AccountPage {
 
         ComboBox<String> comboBox = new ComboBox<>();
         comboBox.getItems().setAll(getSavedConnections());
+        comboBox.setPromptText("Choose a saved connection");
+        comboBox.setMaxWidth(Double.MAX_VALUE);
         Button setdefault=new Button("Set Default");
         setdefault.setOnAction(e -> {
-           String v=comboBox.getValue();
+            String v=comboBox.getValue();
             try {
                 SavedConnectionService.change_default(v);
             } catch (IOException ex) {
@@ -62,6 +64,7 @@ public class AccountPage {
         });
         setdefault.setText("Set Default Connection");
         setdefault.getStyleClass().add("primary-button");
+        setdefault.setMaxWidth(Double.MAX_VALUE);
         java.util.List<Object[]> rows = currentReader.runQuery(sql).getRows();
         String created_at = "";
         if (!rows.isEmpty()) {
@@ -73,58 +76,60 @@ public class AccountPage {
 
         Label title = new Label(username);
         title.getStyleClass().add("welcome-title");
+        title.setStyle("-fx-font-size: 26px;");
 
         updateButton.setText("Update Connection");
         updateButton.getStyleClass().add("primary-button");
+        updateButton.setMaxWidth(Double.MAX_VALUE);
 
         updateButton.setOnAction(e -> new UpdateConnectionDialog(username, currentReader, currentSchema).show(stage));
 
         // Username
         Label usernameLabel = new Label("Username");
-        usernameLabel.setStyle("-fx-font-size: 13px;" + "-fx-font-weight: bold;" + "-fx-text-fill: #777777;");
-
-        title.setStyle("-fx-font-size: 26px;" + "-fx-font-weight: bold;" + "-fx-text-fill: #222222;");
+        usernameLabel.getStyleClass().add("muted-label");
 
         VBox usernameBox = new VBox(5, usernameLabel, title);
 
         // Created at
         Label createdLabel = new Label("Account created");
-        createdLabel.setStyle("-fx-font-size: 13px;" + "-fx-font-weight: bold;" + "-fx-text-fill: #777777;");
+        createdLabel.getStyleClass().add("muted-label");
 
         Label createdAtValue = new Label(created_at);
-        createdAtValue.setStyle("-fx-font-size: 15px;" + "-fx-text-fill: #555555;");
+        createdAtValue.getStyleClass().add("section-label");
 
         VBox createdBox = new VBox(5, createdLabel, createdAtValue);
 
-        VBox information = new VBox(25, usernameBox, createdBox, updateButton,comboBox,setdefault);
+        Separator divider = new Separator();
+        divider.getStyleClass().add("card-divider");
 
+        Label connectionSectionLabel = new Label("Saved connection");
+        connectionSectionLabel.getStyleClass().add("section-label");
+
+        VBox connectionBox = new VBox(10, connectionSectionLabel, comboBox, setdefault);
+
+        VBox information = new VBox(22, usernameBox, createdBox, divider, updateButton, connectionBox);
 
         information.setAlignment(Pos.CENTER_LEFT);
         information.setPadding(new Insets(30));
 
-        information.setMaxWidth(500);
+        information.setMaxWidth(420);
+        information.setMaxHeight(Region.USE_PREF_SIZE);
 
-        information.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-border-color: #e2e2e2;" +
-                        "-fx-border-radius: 12;" +
-                        "-fx-border-width: 1;");
+        information.getStyleClass().add("panel-card");
 
         // Center
         StackPane center = new StackPane(information);
 
-        center.setAlignment(Pos.TOP_CENTER);
+        center.setAlignment(Pos.CENTER);
         center.setPadding(new Insets(50));
 
-        center.setStyle("-fx-background-color: #f5f6f8;");
         BorderPane root = new BorderPane();
         root.setTop(navbar);
         root.setCenter(center);
 
         Scene scene = new Scene(root, 1530, 800);
 
-        var cssUrl = getClass().getResource("welcome.css");
+        var cssUrl = getClass().getResource("accountpage.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }
@@ -139,13 +144,10 @@ public class AccountPage {
         HBox navbar = new HBox(12);
         navbar.setPadding(new Insets(10, 20, 10, 20));
         navbar.setAlignment(Pos.CENTER_LEFT);
-        navbar.setStyle("-fx-background-color: #2b2b2b;");
+        navbar.getStyleClass().add("navbar");
 
-        String navBtnStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;";
-
-
-        homeButton.setStyle(navBtnStyle);
-        logoutBtn.setStyle(navBtnStyle);
+        homeButton.getStyleClass().add("nav-button");
+        logoutBtn.getStyleClass().add("nav-button");
         homeButton.setOnAction(e -> new DataBrowserPage(username, currentReader, currentSchema).show(stage));
         logoutBtn.setOnAction(e -> {
             new LoginDialog(new AuthService()).show(new Stage());

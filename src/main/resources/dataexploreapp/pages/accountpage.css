@@ -1,0 +1,147 @@
+
+.root {
+    -fx-base: #1e293b;
+    -fx-background: #0f172a;
+    -fx-control-inner-background: #16202f;
+    -fx-control-inner-background-alt: #182234;
+    -fx-accent: #3b82f6;
+    -fx-focus-color: #3b82f6;
+    -fx-faint-focus-color: #3b82f633;
+    -fx-text-base-color: #e2e8f0;
+    -fx-text-fill: #e2e8f0;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+.text-field, .password-field {
+    -fx-prompt-text-fill: #64748b;
+}
+
+/* ---- Buttons ------------------------------------------------------------ */
+.button {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #e2e8f0;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-padding: 6 14 6 14;
+    -fx-cursor: hand;
+}
+.button:hover {
+    -fx-background-color: #263349;
+    -fx-border-color: #3b82f6;
+}
+.button:pressed {
+    -fx-background-color: #17202f;
+}
+
+.primary-button {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 32 12 32;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+.primary-button:hover {
+    -fx-background-color: #2563eb;
+}
+.primary-button:pressed {
+    -fx-background-color: #1d4ed8;
+}
+
+/* ---- Navbar --------------------------------------------------------------- */
+.navbar {
+    -fx-background-color: #111827;
+    -fx-border-color: transparent transparent #334155 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.nav-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f1f5f9;
+}
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-background-radius: 6;
+}
+.nav-button:hover {
+    -fx-text-fill: white;
+    -fx-background-color: #1e293b;
+}
+
+/* ---- Info card ------------------------------------------------------------ */
+.panel-card {
+    -fx-background-color: #131c2b;
+    -fx-background-radius: 8;
+    -fx-border-color: #263349;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.welcome-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.section-label {
+    -fx-text-fill: #f1f5f9;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.muted-label {
+    -fx-text-fill: #94a3b8;
+    -fx-font-size: 12px;
+}
+
+.card-divider .line {
+    -fx-border-color: #263349;
+    -fx-border-width: 1 0 0 0;
+}
+
+.combo-box {
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-padding: 2 4 2 4;
+    -fx-font-size: 13px;
+}
+.combo-box .list-cell {
+    -fx-padding: 6 8 6 8;
+}
+.combo-box:focused {
+    -fx-border-color: #3b82f6;
+}
+
+/* ---- ComboBox dropdown popup -----------------------------------------------
+   Must stay fully opaque - it floats above other content, so a transparent
+   background makes it see-through. */
+.combo-box-popup .list-view {
+    -fx-background-color: #1e293b;
+    -fx-border-color: #334155;
+    -fx-border-width: 1;
+    -fx-background-insets: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 12, 0, 0, 4);
+}
+.combo-box-popup .list-cell {
+    -fx-background-color: #1e293b;
+    -fx-text-fill: #e2e8f0;
+    -fx-padding: 6 10 6 10;
+}
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #2c3d59;
+}
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+}
