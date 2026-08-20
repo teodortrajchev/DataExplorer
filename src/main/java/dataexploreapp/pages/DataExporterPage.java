@@ -425,7 +425,7 @@ public class DataExporterPage {
 
 
         Scene scene = new Scene(root, 1000, 750);
-        var cssUrl = getClass().getResource("global.css");
+        var cssUrl = getClass().getResource("global_dark.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }

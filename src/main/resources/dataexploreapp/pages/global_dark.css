@@ -38,10 +38,7 @@
     -fx-prompt-text-fill: #64748b;
 }
 
-/* ---- Global theme base -------------------------------------------------
-   Driving Modena's built-in color derivation keeps every stock control
-   (ComboBox, ListView, TableView, ScrollPane, CheckBox, TextField...)
-   consistent with the palette without having to hand-style each one. */
+/* Global theme base  */
 .root {
     -fx-base: #1e293b;
     -fx-background: #0f172a;
@@ -242,8 +239,7 @@
     -fx-text-fill: white;
 }
 
-/* ComboBox dropdown popups - must stay fully opaque, they float above other
-   content so a transparent background makes them see-through. */
+/* ComboBox dropdown popups  */
 .combo-box-popup .list-view {
     -fx-background-color: #1e293b;
     -fx-border-color: #334155;
@@ -262,4 +258,16 @@
 .combo-box-popup .list-cell:filled:selected {
     -fx-background-color: #3b82f6;
     -fx-text-fill: white;
+}
+
+.quality-good .bar {
+    -fx-background-color: #22c55e;
+}
+
+.quality-warning .bar {
+    -fx-background-color: #f59e0b;
+}
+
+.quality-bad .bar {
+    -fx-background-color: #ef4444;
 }

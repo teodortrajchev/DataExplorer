@@ -72,7 +72,7 @@ public class ProceduresParamsDialog {
 
 
         Scene scene =new Scene(root, 380, 120 + inputParams.size() * 40);
-        var cssUrl = ProceduresParamsDialog.class.getResource("/dataexploreapp/pages/global.css");
+        var cssUrl = ProceduresParamsDialog.class.getResource("/dataexploreapp/pages/global_dark.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }

@@ -70,7 +70,7 @@ public class ExportDialog {
         root.setAlignment(Pos.CENTER);
 
         Scene scene = new Scene(root, 360, 280);
-        var cssUrl = getClass().getResource("/dataexploreapp/pages/global.css");
+        var cssUrl = getClass().getResource("/dataexploreapp/pages/global_dark.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }

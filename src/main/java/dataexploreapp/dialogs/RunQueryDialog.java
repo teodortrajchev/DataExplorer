@@ -78,7 +78,7 @@ public class RunQueryDialog {
         VBox root = new VBox(12, title, hint, queryArea, errorLabel, buttons);
         root.setPadding(new Insets(20));
         Scene scene =new Scene(root, 520, 380);
-        var cssUrl = RunQueryDialog.class.getResource("/dataexploreapp/pages/global.css");
+        var cssUrl = RunQueryDialog.class.getResource("/dataexploreapp/pages/global_dark.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }

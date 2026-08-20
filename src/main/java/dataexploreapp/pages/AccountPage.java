@@ -137,7 +137,7 @@ public class AccountPage {
 
         Scene scene = new Scene(root, 1530, 800);
 
-        var cssUrl = getClass().getResource("global.css");
+        var cssUrl = getClass().getResource("global_dark.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }

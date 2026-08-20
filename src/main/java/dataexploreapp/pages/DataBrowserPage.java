@@ -9,6 +9,7 @@ import dataexploreapp.dialogs.LoginDialog;
 import dataexploreapp.dialogs.ProceduresParamsDialog;
 import dataexploreapp.dialogs.RunQueryDialog;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Orientation;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.WritableImage;
 import javax.imageio.ImageIO;
@@ -226,8 +227,7 @@ public class DataBrowserPage {
         procedureList.getStyleClass().add("sidebar-list");
         proceduresPanel.getStyleClass().add("panel-card");
         proceduresPanel.setPadding(new Insets(10));
-        proceduresPanel.setPrefWidth(200);
-        proceduresPanel.setPrefHeight(180);
+        proceduresPanel.setPrefWidth(180);
 
         VBox.setVgrow(procedureList, Priority.ALWAYS);
 
@@ -342,8 +342,8 @@ public class DataBrowserPage {
         detailsPanel.getChildren().addAll(detailsPanelHeader, columnsPanel, foreignKeysPanel);
         detailsPanel.getStyleClass().add("details-panel");
         detailsPanel.setPrefWidth(DETAILS_PANEL_WIDTH);
-        detailsPanel.setMinWidth(DETAILS_PANEL_WIDTH);
-        detailsPanel.setMaxWidth(DETAILS_PANEL_WIDTH);
+        detailsPanel.setMinWidth(180);
+        detailsPanel.setMaxWidth(Double.MAX_VALUE);
 
         detailsPanelWrapper.setAlignment(Pos.TOP_LEFT);
         detailsPanelWrapper.setPrefWidth(0);
@@ -364,7 +364,7 @@ public class DataBrowserPage {
 
         leftPanel.setPadding(new Insets(10));
         leftPanel.setPrefWidth(240);
-        leftPanel.setMinWidth(240);
+        leftPanel.setMinWidth(180);
 
 // Make the entire left sidebar scrollable
         ScrollPane leftScrollPane = new ScrollPane(leftPanel);
@@ -372,21 +372,33 @@ public class DataBrowserPage {
         leftScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         leftScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         leftScrollPane.setPrefWidth(260);
-        leftScrollPane.setMinWidth(260);
-        leftScrollPane.setMaxWidth(260);
+        leftScrollPane.setMinWidth(180);
+        leftScrollPane.setMaxWidth(Double.MAX_VALUE);
 
         // Nav sidebar + sliding details panel, side by side
         HBox sidebarArea = new HBox(leftScrollPane, detailsPanelWrapper);
         sidebarArea.setFillHeight(true);
 
-        // CENTER PANEL
         dataQualityBox.setVisible(false);
         dataQualityBox.setManaged(false);
+
         HBox paginationBar = buildPaginationBar();
 
-        VBox centerPanel = new VBox(10, dataQualityBox,resultsTable, paginationBar, statusLabel,chartArea);
+        VBox centerPanel = new VBox(
+                10,
+                dataQualityBox,
+                resultsTable,
+                paginationBar,
+                statusLabel,
+                chartArea
+        );
+
+        centerPanel.setPadding(new Insets(10));
+        centerPanel.setFillWidth(true);
 
         resultsTable.setMinHeight(400);
+        resultsTable.setPrefHeight(500);
+
         chartArea.getStyleClass().add("panel-card");
         chartArea.setMinHeight(600);
         chartArea.setPrefHeight(600);
@@ -395,34 +407,53 @@ public class DataBrowserPage {
         statusLabel.getStyleClass().add("status-label");
 
 
-        centerPanel.setPadding(new Insets(10));
-        ScrollPane centerScrollPane = new ScrollPane(centerPanel);
+// CENTER SCROLL PANE
+        ScrollPane centerScrollPane = new ScrollPane();
+        centerScrollPane.setContent(centerPanel);
         centerScrollPane.setFitToWidth(true);
+        centerScrollPane.setFitToHeight(false);
         centerScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         centerScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         centerScrollPane.setMinWidth(260);
         centerScrollPane.setMaxWidth(Double.MAX_VALUE);
 
+
+    // RIGHT CONTROLS
+        ScrollPane controlsScrollPane = buildControlsScrollPane();
+
+
+    // SPLIT PANE
+        SplitPane splitPane = new SplitPane();
+        splitPane.setOrientation(Orientation.HORIZONTAL);
+
+        splitPane.getItems().addAll(
+                sidebarArea,
+                centerScrollPane,
+                controlsScrollPane
+        );
+
+        splitPane.setDividerPositions(0.17, 0.82);
+
+
+    // ROOT
         BorderPane root = new BorderPane();
 
         root.setTop(buildNavbar());
-        root.setLeft(sidebarArea);
-        root.setRight(buildControlsScrollPane());
-        root.setCenter(centerScrollPane);
+        root.setCenter(splitPane);
+
+        root.setTop(buildNavbar());
+        root.setCenter(splitPane);
 
         BorderPane.setMargin(centerPanel, new Insets(10));
-
 
         // SCENE
         Scene scene = new Scene(root, 1530, 800);
 
-        var cssUrl = getClass().getResource("global.css");
+        var cssUrl = getClass().getResource("global_dark.css");
 
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }
-
-
 
         // SHOW WINDOW
         stage.setTitle("Data Browser");
@@ -430,10 +461,7 @@ public class DataBrowserPage {
 
         // Start maximized like the layout you provided
         stage.setMaximized(true);
-
         stage.show();
-
-
         // LOAD DATA
         loadTableListAsync();
         loadProceduresListAsync();

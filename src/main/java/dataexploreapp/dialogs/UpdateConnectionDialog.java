@@ -1,7 +1,6 @@
 package dataexploreapp.dialogs;
 
 import dataexploreapp.db_config.database.DataBaseReader;
-import dataexploreapp.pages.AccountPage;
 import dataexploreapp.pages.DataBrowserPage;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
@@ -11,7 +10,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -90,7 +88,7 @@ public class UpdateConnectionDialog {
 
 
         Scene scene = new Scene(root, 600, 400);
-        var cssUrl = UpdateConnectionDialog.class.getResource("/dataexploreapp/pages/global.css");
+        var cssUrl = UpdateConnectionDialog.class.getResource("/dataexploreapp/pages/global_dark.css");
         if (cssUrl != null) {
             scene.getStylesheets().add(cssUrl.toExternalForm());
         }

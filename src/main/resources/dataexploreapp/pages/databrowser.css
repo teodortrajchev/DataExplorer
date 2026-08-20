@@ -38,10 +38,7 @@
     -fx-prompt-text-fill: #64748b;
 }
 
-/* ---- Global theme base -------------------------------------------------
-   Driving Modena's built-in color derivation keeps every stock control
-   (ComboBox, ListView, TableView, ScrollPane, CheckBox, TextField...)
-   consistent with the palette without having to hand-style each one. */
+/*Global theme base*/
 .root {
     -fx-base: #1e293b;
     -fx-background: #0f172a;
