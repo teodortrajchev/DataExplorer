@@ -107,10 +107,7 @@ public class ConnectionPage {
         root.setCenter(centerContent);
 
         Scene scene = new Scene(root, 1400, 700);
-        var cssUrl = getClass().getResource("global_dark.css");
-        if (cssUrl != null) {
-            scene.getStylesheets().add(cssUrl.toExternalForm());
-        }
+        dataexploreapp.themes.ThemeManager.register(scene);
 
         stage.setTitle("Connect to a database");
         stage.setScene(scene);
@@ -140,7 +137,7 @@ public class ConnectionPage {
             stage.close();
         });
 
-        navbar.getChildren().addAll( spacer,logoutBtn);        return navbar;
+        navbar.getChildren().addAll(navLabel, spacer,logoutBtn);        return navbar;
     }
     private void attemptConnect() {
         String url = urlField.getText().trim();

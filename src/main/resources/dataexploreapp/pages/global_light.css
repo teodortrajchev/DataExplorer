@@ -1,0 +1,283 @@
+/*
+   background : #f1f5f9   panel/card : #ffffff   border : #e2e8f0
+   text       : #0f172a   muted text : #64748b   accent : #3b82f6
+ */
+
+.axis-label {
+    -fx-text-fill: -fx-text-base-color;
+}
+
+.welcome-center {
+    -fx-background-color: linear-gradient(to bottom right, #eef2ff, #f8fafc);
+}
+
+.welcome-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+.welcome-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #64748b;
+}
+
+.quality-good .bar {
+    -fx-background-color: #22c55e;
+}
+
+.quality-warning .bar {
+    -fx-background-color: #f59e0b;
+}
+
+.quality-bad .bar {
+    -fx-background-color: #ef4444;
+}
+
+.text-field, .password-field {
+    -fx-prompt-text-fill: #94a3b8;
+}
+
+/* ---- Global theme base ------------------------------------------------- */
+.root {
+    -fx-base: #ffffff;
+    -fx-background: #f1f5f9;
+    -fx-control-inner-background: #ffffff;
+    -fx-control-inner-background-alt: #f8fafc;
+    -fx-accent: #3b82f6;
+    -fx-focus-color: #3b82f6;
+    -fx-faint-focus-color: #3b82f633;
+    -fx-text-base-color: #0f172a;
+    -fx-text-fill: #0f172a;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* ---- Buttons ------------------------------------------------------------ */
+.button {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #0f172a;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1;
+    -fx-padding: 6 14 6 14;
+    -fx-cursor: hand;
+}
+.button:hover {
+    -fx-background-color: #e2e8f0;
+    -fx-border-color: #3b82f6;
+}
+.button:pressed {
+    -fx-background-color: #cbd5e1;
+}
+.button:default {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+}
+.button:default:hover {
+    -fx-background-color: #2563eb;
+}
+
+.primary-button {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 32 12 32;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+.primary-button:hover {
+    -fx-background-color: #2563eb;
+}
+.primary-button:pressed {
+    -fx-background-color: #1d4ed8;
+}
+
+.remove-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #dc2626;
+    -fx-text-fill: #dc2626;
+    -fx-padding: 0;
+    -fx-font-size: 11px;
+    -fx-alignment: CENTER;
+    -fx-content-display: CENTER;
+}
+.remove-button:hover {
+    -fx-background-color: #fee2e2;
+}
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-padding: 2 8 2 8;
+}
+.icon-button:hover {
+    -fx-text-fill: #0f172a;
+    -fx-background-color: #e2e8f0;
+    -fx-background-radius: 4;
+}
+
+/* ---- Navbar --------------------------------------------------------------- */
+.navbar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.nav-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #475569;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-background-radius: 6;
+}
+.nav-button:hover {
+    -fx-text-fill: #0f172a;
+    -fx-background-color: #e2e8f0;
+}
+
+/* ---- Sidebar / panel cards ------------------------------------------------ */
+.panel-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+
+.section-label {
+    -fx-text-fill: #0f172a;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.muted-label {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 12px;
+}
+
+.status-label {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 12px;
+}
+
+.details-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 0 0 0 1;
+}
+
+/* ---- Table -------------------------------------------------------------- */
+.table-view {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-table-cell-border-color: #e2e8f0;
+}
+.table-view .column-header-background {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 8 8 0 0;
+}
+.table-view .column-header, .table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-size: 34;
+}
+.table-view .column-header .label {
+    -fx-text-fill: #334155;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
+.table-row-cell {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #0f172a;
+}
+.table-row-cell:odd {
+    -fx-background-color: #f8fafc;
+}
+.table-row-cell:selected {
+    -fx-background-color: #bfdbfe;
+    -fx-text-fill: #0f172a;
+}
+.table-row-cell:hover {
+    -fx-background-color: #eff6ff;
+}
+
+/* ---- Scroll panes ---------------------------------------------------------- */
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Tables/Procedures sidebar lists - blend into their panel-card background */
+.sidebar-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.sidebar-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #334155;
+    -fx-padding: 6 8 6 8;
+}
+.sidebar-list .list-cell:filled:hover {
+    -fx-background-color: #eff6ff;
+}
+.sidebar-list .list-cell:filled:selected {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+}
+
+/* ComboBox dropdown popups - must stay fully opaque, they float above other
+   content so a transparent background makes them see-through. */
+.combo-box-popup .list-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-background-insets: 0;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.15), 12, 0, 0, 4);
+}
+.combo-box-popup .list-cell {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #0f172a;
+    -fx-padding: 6 10 6 10;
+}
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #eff6ff;
+}
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+}
+
+/* ---- Account page divider (kept for accountpage.css parity) -------------- */
+.card-divider .line {
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 0 0 0;
+}
+
+.combo-box {
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1;
+    -fx-padding: 2 4 2 4;
+    -fx-font-size: 13px;
+}
+.combo-box .list-cell {
+    -fx-padding: 6 8 6 8;
+}
+.combo-box:focused {
+    -fx-border-color: #3b82f6;
+}

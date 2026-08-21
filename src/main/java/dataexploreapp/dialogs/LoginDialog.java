@@ -2,6 +2,7 @@ package dataexploreapp.dialogs;
 
 import dataexploreapp.auth.AuthService;
 import dataexploreapp.db_config.save.ConnectionManager;
+import dataexploreapp.pages.ConnectionPage;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -59,10 +60,7 @@ public class LoginDialog {
         passwordField.setOnAction(e -> attemptLogin());
 
         Scene scene = new Scene(grid, 380, 260);
-        var cssUrl = getClass().getResource("/dataexploreapp/pages/global_dark.css");
-        if (cssUrl != null) {
-            scene.getStylesheets().add(cssUrl.toExternalForm());
-        }
+        dataexploreapp.themes.ThemeManager.register(scene);
         stage.setTitle("Login");
         stage.setScene(scene);
         stage.show();

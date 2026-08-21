@@ -105,10 +105,7 @@ public class ExportHistoryPage {
         root.setPadding(new Insets(20));
 
         Scene scene = new Scene(root, 900, 500);
-        var cssUrl = getClass().getResource("global_dark.css");
-        if (cssUrl != null) {
-            scene.getStylesheets().add(cssUrl.toExternalForm());
-        }
+        dataexploreapp.themes.ThemeManager.register(scene);
         stage.setTitle("Export history");
         stage.setScene(scene);
         stage.show();

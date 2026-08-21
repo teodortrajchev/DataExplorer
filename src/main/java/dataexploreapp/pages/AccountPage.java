@@ -137,10 +137,7 @@ public class AccountPage {
 
         Scene scene = new Scene(root, 1530, 800);
 
-        var cssUrl = getClass().getResource("global_dark.css");
-        if (cssUrl != null) {
-            scene.getStylesheets().add(cssUrl.toExternalForm());
-        }
+        dataexploreapp.themes.ThemeManager.register(scene);
 
         stage.setTitle("Settings");
         stage.setScene(scene);
@@ -164,7 +161,14 @@ public class AccountPage {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        navbar.getChildren().addAll(homeButton, spacer,logoutBtn);
+        Button themeBtn = new Button(dataexploreapp.themes.ThemeManager.isDark() ? "☀ Light mode" : "🌙 Dark mode");
+        themeBtn.getStyleClass().add("nav-button");
+        themeBtn.setOnAction(e -> {
+            dataexploreapp.themes.ThemeManager.toggleTheme();
+            themeBtn.setText(dataexploreapp.themes.ThemeManager.isDark() ? "☀ Light mode" : "🌙 Dark mode");
+        });
+
+        navbar.getChildren().addAll(homeButton,themeBtn, spacer, logoutBtn);
         return navbar;
     }
     private List<String> getSavedConnections(){
@@ -234,7 +238,7 @@ public class AccountPage {
 
         Timeline drawCheck = new Timeline(
                 new KeyFrame(Duration.ZERO,
-                new KeyValue(check.strokeDashOffsetProperty(), 30)),
+                        new KeyValue(check.strokeDashOffsetProperty(), 30)),
                 new KeyFrame(Duration.millis(350),
                         new KeyValue(check.strokeDashOffsetProperty(), 0, Interpolator.EASE_OUT)));
 
