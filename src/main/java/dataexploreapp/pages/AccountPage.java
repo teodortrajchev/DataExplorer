@@ -141,6 +141,8 @@ public class AccountPage {
 
         stage.setTitle("Settings");
         stage.setScene(scene);
+        stage.setMinWidth(650);
+        stage.setMinHeight(500);
         stage.show();
     }
 

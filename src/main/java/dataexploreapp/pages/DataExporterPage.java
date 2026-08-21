@@ -429,6 +429,8 @@ public class DataExporterPage {
 
         stage.setTitle("Data Exporter");
         stage.setScene(scene);
+        stage.setMinWidth(700);
+        stage.setMinHeight(600);
         stage.show();
     }
 

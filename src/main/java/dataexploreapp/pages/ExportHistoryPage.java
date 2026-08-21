@@ -84,6 +84,7 @@ public class ExportHistoryPage {
         });
 
         table.getColumns().addAll(List.of(dateCol, tableCol, formatCol, filterCol, sortCol, rowsCol, fileCol, actionCol));
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         refreshTable();
         table.setPlaceholder(new Label("No exports yet."));
@@ -103,11 +104,14 @@ public class ExportHistoryPage {
 
         VBox root = new VBox(12, header, table);
         root.setPadding(new Insets(20));
+        VBox.setVgrow(table, Priority.ALWAYS);
 
         Scene scene = new Scene(root, 900, 500);
         dataexploreapp.themes.ThemeManager.register(scene);
         stage.setTitle("Export history");
         stage.setScene(scene);
+        stage.setMinWidth(700);
+        stage.setMinHeight(400);
         stage.show();
     }
 

@@ -111,6 +111,8 @@ public class ConnectionPage {
 
         stage.setTitle("Connect to a database");
         stage.setScene(scene);
+        stage.setMinWidth(700);
+        stage.setMinHeight(500);
         stage.show();
     }
 
