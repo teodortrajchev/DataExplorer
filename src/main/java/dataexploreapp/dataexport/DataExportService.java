@@ -12,11 +12,12 @@ import java.sql.SQLException;
 
 public class DataExportService {
     private static final Logger logger = LoggerFactory.getLogger(DataExportService.class);
+    private final DataBaseReader reader;
 
+    public DataExportService(DataBaseReader reader) {
+        this.reader = reader;
+    }
     public void export(
-            String db_url,
-            String db_user,
-            String db_pass,
             String query,
             ExportFormat format,
             Path output,
@@ -24,8 +25,6 @@ public class DataExportService {
     ) {
 
         logger.info("Starting export: format={}, output={}", format, output.toAbsolutePath());
-
-        DataBaseReader reader = new DataBaseReader(db_url, db_user, db_pass);
 
         DataTable table;
 

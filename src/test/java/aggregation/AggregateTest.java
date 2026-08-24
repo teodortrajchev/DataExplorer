@@ -80,9 +80,9 @@ public class AggregateTest {
         Object [] row= result_table.getRows().get(0);
         assertEquals(2.0,row[1]);
         //test za requiresValueColumn()
-        DataTable result_table2=Aggregator.aggregate(table,"score",null,AggregationFunction.COUNT);
-        Object [] points= result_table.getRows().get(0);
-        assertEquals(2.0,row[1]);
+        DataTable result_table2=Aggregator.aggregate(table,"id",null,AggregationFunction.COUNT);
+        Object [] points= result_table2.getRows().get(0);
+        assertEquals(2.0,points[1]);
     }
     @Test void avg_test() throws IOException {
         table.addRow(new Object[]{1, "Teodor","24/08/2026",5000});
