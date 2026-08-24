@@ -6,27 +6,31 @@ import dataexploreapp.db_config.database.DataTable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 public final class Aggregator {
 
-    private Aggregator() {
+    public Aggregator() {
     }
 
 
     public static DataTable aggregate(DataTable table, String groupColumn, String valueColumn, AggregationFunction function) {
         int groupIdx = table.getColumnNames().indexOf(groupColumn);
+        Objects.requireNonNull(groupColumn, "groupColumn cannot be null");
+        Objects.requireNonNull(function, "function cannot be null");
+
         if (groupIdx == -1) {
             throw new IllegalArgumentException("Unknown group column: " + groupColumn);
         }
         int valueIdx = -1;
         if (function.requiresValueColumn()) {
+            Objects.requireNonNull(valueColumn, "aggregateColumn cannot be null");
             valueIdx = table.getColumnNames().indexOf(valueColumn);
             if (valueIdx == -1) {
                 throw new IllegalArgumentException("Unknown value column: " + valueColumn);
             }
         }
-
         Map<String, List<Double>> groups = new LinkedHashMap<>();
         for (Object[] row : table.getRows()) {
             String key = row[groupIdx] == null ? "(null)" : row[groupIdx].toString();

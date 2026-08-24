@@ -4,7 +4,7 @@ package dataexploreapp.aggregation;
 public enum AggregationFunction {
     SUM, AVG, COUNT, MIN, MAX;
 
-    /** Column label used in the resulting aggregated DataTable, e.g. "SUM(SALARY)". */
+    // vrakja "SUM(SALARY)"
     public String describe(String valueColumn) {
         if (this == COUNT) {
             return "COUNT";
@@ -12,7 +12,7 @@ public enum AggregationFunction {
         return this + "(" + valueColumn + ")";
     }
 
-    /** COUNT doesn't need a value column — it just counts rows per group. */
+    //Count nema potreba od value column samo gi broi redicite
     public boolean requiresValueColumn() {
         return this != COUNT;
     }

@@ -11,8 +11,7 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 
 public class DataExportService {
-    private static final Logger logger =
-            LoggerFactory.getLogger(DataExportService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DataExportService.class);
 
     public void export(
             String db_url,
@@ -26,8 +25,7 @@ public class DataExportService {
 
         logger.info("Starting export: format={}, output={}", format, output.toAbsolutePath());
 
-        DataBaseReader reader =
-                new DataBaseReader(db_url, db_user, db_pass);
+        DataBaseReader reader = new DataBaseReader(db_url, db_user, db_pass);
 
         DataTable table;
 
