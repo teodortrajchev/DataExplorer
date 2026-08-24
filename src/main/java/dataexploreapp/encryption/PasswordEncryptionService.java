@@ -52,8 +52,7 @@ public class PasswordEncryptionService {
 
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
 
-        GCMParameterSpec spec =
-                new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+        GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
 
         cipher.init(Cipher.ENCRYPT_MODE, key, spec);
 
@@ -89,8 +88,7 @@ public class PasswordEncryptionService {
                 encrypted.length
         );
 
-        Cipher cipher =
-                Cipher.getInstance("AES/GCM/NoPadding");
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
 
         GCMParameterSpec spec =
                 new GCMParameterSpec(GCM_TAG_LENGTH, iv);
