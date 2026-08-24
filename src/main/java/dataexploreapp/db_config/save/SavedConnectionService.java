@@ -16,8 +16,7 @@ import java.util.Optional;
 
 public class SavedConnectionService {
 
-    private static final Path CONNECTIONS_FILE =
-            Path.of(System.getProperty("user.home"), ".dataexplorer", "connections.json");
+    private static Path connections_file = Path.of(System.getProperty("user.home"), ".dataexplorer", "connections.json");
 
     private static final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
@@ -28,7 +27,7 @@ public class SavedConnectionService {
 
         try {
 
-            File file = CONNECTIONS_FILE.toFile();
+            File file = connections_file.toFile();
 
             if (!file.exists()) {
                 return new ArrayList<>();
@@ -45,7 +44,9 @@ public class SavedConnectionService {
             return new ArrayList<>();
         }
     }
-
+    public static void setConnectionsFile(Path path) {
+        connections_file = path;
+    }
     public static List<SavedConnection> getConnectionsForUser(String applicationUser) {
 
         return loadConnections()
@@ -64,7 +65,7 @@ public class SavedConnectionService {
 
         try {
 
-            Files.createDirectories(CONNECTIONS_FILE.getParent());
+            Files.createDirectories(connections_file.getParent());
 
             List<SavedConnection> connections = loadConnections();
 
@@ -91,7 +92,7 @@ public class SavedConnectionService {
 
             connections.add(connection);
 
-            mapper.writeValue(CONNECTIONS_FILE.toFile(), connections);
+            mapper.writeValue(connections_file.toFile(), connections);
 
         } catch (Exception e) {
 
@@ -107,7 +108,7 @@ public class SavedConnectionService {
 
             connections.removeIf(connection -> connection.getApplicationUser().equalsIgnoreCase(applicationUser) && connection.getName().equalsIgnoreCase(connectionName));
 
-            mapper.writeValue(CONNECTIONS_FILE.toFile(), connections);
+            mapper.writeValue(connections_file.toFile(), connections);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete saved connection.", e);
@@ -115,7 +116,7 @@ public class SavedConnectionService {
     }
     public static void change_default(String name) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        File file = CONNECTIONS_FILE.toFile();
+        File file = connections_file.toFile();
         // Read JSON
         ArrayNode connections = (ArrayNode) mapper.readTree(file);
         for (JsonNode node : connections) {

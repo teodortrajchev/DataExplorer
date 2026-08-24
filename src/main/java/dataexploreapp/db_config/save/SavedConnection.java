@@ -1,21 +1,26 @@
 package dataexploreapp.db_config.save;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dataexploreapp.encryption.PasswordEncryptionService;
 
 public class SavedConnection {
 
     private String name;
+
+    @JsonProperty("applicationUser")
     private String applicationUser;
+
     private String jdbcUrl;
     private String databaseUser;
     private String encryptedPassword;
     private String schema;
     private boolean defaultConnection;
-    public  SavedConnection(){
 
+    public SavedConnection() {
     }
-    public SavedConnection(String name , String applicationUser, String jdbcUrl, String databaseUser, String encryptedPassword, String schema, boolean defaultConnection) {
+
+    public SavedConnection(String name, String applicationUser, String jdbcUrl, String databaseUser, String encryptedPassword, String schema, boolean defaultConnection) {
         this.name = name;
         this.applicationUser = applicationUser;
         this.jdbcUrl = jdbcUrl;
@@ -29,6 +34,8 @@ public class SavedConnection {
         this.name = name;
     }
 
+
+    @JsonIgnore
     public void setApplicationUser(String applicationUser) {
         this.applicationUser = applicationUser;
     }
@@ -57,6 +64,12 @@ public class SavedConnection {
         return name;
     }
 
+    /**
+     * Public API: returns the DECRYPTED application user.
+     * Ignored by Jackson - the field annotation above handles JSON binding,
+     * so this never gets invoked during writeValue()/readValue().
+     */
+    @JsonIgnore
     public String getApplicationUser() {
         try {
             return PasswordEncryptionService.decrypt(applicationUser);
