@@ -15,10 +15,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SavedConnectionTest {
+
     private static final Dotenv dotenv = Dotenv.load();
+
     @Test
     void savedConnection_value_test() throws Exception {
-
         String applicationUser = "admin";
         String databaseUser = dotenv.get("DB_USER");
         String password = dotenv.get("DB_PASS");

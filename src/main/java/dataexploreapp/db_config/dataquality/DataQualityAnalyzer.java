@@ -25,7 +25,7 @@ public class DataQualityAnalyzer {
         return report;
     }
 
-    private static int findDuplicates(List<Map<String, Object>> rows) {
+    public static int findDuplicates(List<Map<String, Object>> rows) {
         Set<Map<String, Object>> uniqueRows = new HashSet<>();
         int duplicates = 0;
 
@@ -38,7 +38,7 @@ public class DataQualityAnalyzer {
         return duplicates;
     }
 
-    private static double calculateMissingPercentage(List<Map<String, Object>> rows) {
+    public static double calculateMissingPercentage(List<Map<String, Object>> rows) {
         int missing = 0;
         int total = rows.size() * rows.get(0).size();
 
@@ -52,9 +52,9 @@ public class DataQualityAnalyzer {
 
         return total == 0 ? 0 : (missing * 100.0) / total;
     }
-    private static int findInvalidEmails(List<Map<String, Object>> rows) {
+    public static int findInvalidEmails(List<Map<String, Object>> rows) {
         int invalid = 0;
-        Pattern pattern = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+        Pattern pattern = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+.com$");
         for (Map<String, Object> row : rows) {
             Object email = getColumnIgnoreCase(row, "email");
             if (email != null) {
