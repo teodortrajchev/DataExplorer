@@ -1,4 +1,4 @@
-package dataexploreapp.dataexport.exporters;
+package dataexploreapp.dataexport;
 
 import dataexploreapp.db_config.database.DataTable;
 

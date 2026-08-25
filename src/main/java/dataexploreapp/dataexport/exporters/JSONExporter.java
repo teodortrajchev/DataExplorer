@@ -1,6 +1,7 @@
 package dataexploreapp.dataexport.exporters;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dataexploreapp.dataexport.IExporter;
 import dataexploreapp.db_config.database.DataTable;
 
 import java.io.IOException;

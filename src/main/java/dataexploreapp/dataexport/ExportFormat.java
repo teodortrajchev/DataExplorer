@@ -1,4 +1,6 @@
-package dataexploreapp.dataexport.exporters;
+package dataexploreapp.dataexport;
+
+import dataexploreapp.dataexport.exporters.*;
 
 public enum ExportFormat {
 

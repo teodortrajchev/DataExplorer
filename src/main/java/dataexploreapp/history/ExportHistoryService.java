@@ -14,11 +14,9 @@ import java.util.List;
 
 public class ExportHistoryService {
 
-    private static final Path HISTORY_FILE =
-            Path.of(System.getProperty("user.home"), ".dataexplorer", "export_history.json");
+    private static final Path HISTORY_FILE = Path.of(System.getProperty("user.home"), ".dataexplorer", "export_history.json");
 
-    private static final ObjectMapper mapper = new ObjectMapper()
-            .enable(SerializationFeature.INDENT_OUTPUT);
+    private static final ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 
     public static List<ExportRecord> loadHistory() {
         List<ExportRecord> list = readRaw();

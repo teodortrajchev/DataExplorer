@@ -1,15 +1,19 @@
 package dataexploreapp.dataexport.exporters;
 
+import dataexploreapp.dataexport.IExporter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import dataexploreapp.db_config.database.DataTable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -22,15 +26,40 @@ public class PDFExporter implements IExporter {
     private static final float FONT_SIZE = 9f;
     private static final float TITLE_FONT_SIZE = 16f;
 
-    // Windows system fonts — support Cyrillic, unlike PDFBox's built-in Helvetica
-    private static final String REGULAR_FONT_PATH = "C:\\Windows\\Fonts\\arial.ttf";
-    private static final String BOLD_FONT_PATH = "C:\\Windows\\Fonts\\arialbd.ttf";
+    // Bundle a font under src/main/resources/fonts/ to get full Unicode/Cyrillic
+    // support everywhere. If it's not on the classpath, we fall back to common
+    // system font locations, and finally to PDFBox's built-in Helvetica (Latin only,
+    // but always available — so export never hard-fails for lack of a font file).
+    private static final String REGULAR_FONT_RESOURCE = "/fonts/DejaVuSans.ttf";
+    private static final String BOLD_FONT_RESOURCE = "/fonts/DejaVuSans-Bold.ttf";
+
+    private static final String[] REGULAR_FONT_SYSTEM_PATHS = {
+            "C:\\Windows\\Fonts\\arial.ttf",                              // Windows
+            "/Library/Fonts/Arial.ttf",                                   // macOS
+            "/System/Library/Fonts/Supplemental/Arial.ttf",               // macOS
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",            // Linux (Debian/Ubuntu)
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", // Linux
+            "/usr/share/fonts/dejavu/DejaVuSans.ttf",                     // Linux (Fedora)
+    };
+    private static final String[] BOLD_FONT_SYSTEM_PATHS = {
+            "C:\\Windows\\Fonts\\arialbd.ttf",
+            "/Library/Fonts/Arial Bold.ttf",
+            "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+    };
+
+    // True once we've fallen back to the standard 14 font for the current export,
+    // so text can be sanitized to characters that font can actually encode.
+    private boolean usingStandardFontFallback = false;
 
     @Override
     public void export(DataTable table, Path outputFile) throws IOException {
+        usingStandardFontFallback = false;
         try (PDDocument document = new PDDocument()) {
-            PDFont headerFont = loadFont(document, BOLD_FONT_PATH);
-            PDFont bodyFont = loadFont(document, REGULAR_FONT_PATH);
+            PDFont headerFont = resolveFont(document, BOLD_FONT_RESOURCE, BOLD_FONT_SYSTEM_PATHS, true);
+            PDFont bodyFont = resolveFont(document, REGULAR_FONT_RESOURCE, REGULAR_FONT_SYSTEM_PATHS, false);
 
             PDRectangle pageSize = PDRectangle.A4;
             if (table.getColumnCount() > 5) {
@@ -66,20 +95,61 @@ public class PDFExporter implements IExporter {
         }
     }
 
-    private PDFont loadFont(PDDocument document, String path) throws IOException {
-        File fontFile = new File(path);
-        if (!fontFile.exists()) {
-            throw new IOException("Font file not found: " + path
-                    + " — update REGULAR_FONT_PATH/BOLD_FONT_PATH in PDFExporter to a valid .ttf on this machine.");
+    /**
+     * Resolves a usable font in three steps:
+     *  1. A bundled classpath resource (works identically on every OS).
+     *  2. A known system font path for the current OS.
+     *  3. PDFBox's built-in standard 14 font (Helvetica/Helvetica-Bold) — always
+     *     available, so export never throws for lack of a font file. Latin-only,
+     *     so text gets sanitized (see sanitizeForFont) when this tier is used.
+     */
+    private PDFont resolveFont(PDDocument document, String classpathResource, String[] systemPaths, boolean bold)
+            throws IOException {
+
+        try (InputStream in = getClass().getResourceAsStream(classpathResource)) {
+            if (in != null) {
+                return PDType0Font.load(document, in);
+            }
         }
-        return PDType0Font.load(document, fontFile);
+
+        for (String path : systemPaths) {
+            File fontFile = new File(path);
+            if (fontFile.exists()) {
+                return PDType0Font.load(document, fontFile);
+            }
+        }
+
+        usingStandardFontFallback = true;
+        return new PDType1Font(bold ? Standard14Fonts.FontName.HELVETICA_BOLD : Standard14Fonts.FontName.HELVETICA);
+    }
+
+    /**
+     * When falling back to the standard 14 font, strip characters it can't encode
+     * (e.g. Cyrillic) so showText() doesn't throw mid-export. Embedded TrueType
+     * fonts (the normal case) pass text through untouched.
+     */
+    private String sanitizeForFont(PDFont font, String text) {
+        if (text == null || !usingStandardFontFallback) {
+            return text == null ? "" : text;
+        }
+        StringBuilder sb = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            try {
+                font.encode(String.valueOf(c));
+                sb.append(c);
+            } catch (IOException | IllegalArgumentException e) {
+                sb.append('?');
+            }
+        }
+        return sb.toString();
     }
 
     private float drawTitle(PDPageContentStream cs, DataTable table, PDFont font, float y) throws IOException {
         cs.beginText();
         cs.setFont(font, TITLE_FONT_SIZE);
         cs.newLineAtOffset(MARGIN, y - TITLE_FONT_SIZE);
-        cs.showText(table.getTitle());
+        cs.showText(sanitizeForFont(font, table.getTitle()));
         cs.endText();
 
         y -= TITLE_FONT_SIZE + 6;
@@ -89,7 +159,7 @@ public class PDFExporter implements IExporter {
         cs.newLineAtOffset(MARGIN, y - 10);
         String subtitle = "Generated " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
                 + "  |  " + table.getRowCount() + " rows";
-        cs.showText(subtitle);
+        cs.showText(sanitizeForFont(font, subtitle));
         cs.endText();
 
         return y - 24;
@@ -108,7 +178,7 @@ public class PDFExporter implements IExporter {
             cs.beginText();
             cs.setFont(font, FONT_SIZE);
             cs.newLineAtOffset(x + 3, y - ROW_HEIGHT + 8);
-            cs.showText(truncate(columnNames.get(i), colWidths[i], font, FONT_SIZE));
+            cs.showText(truncate(sanitizeForFont(font, columnNames.get(i)), colWidths[i], font, FONT_SIZE));
             cs.endText();
             x += colWidths[i];
         }
@@ -123,7 +193,7 @@ public class PDFExporter implements IExporter {
             cs.beginText();
             cs.setFont(font, FONT_SIZE);
             cs.newLineAtOffset(x + 3, y - ROW_HEIGHT + 8);
-            cs.showText(truncate(text, colWidths[i], font, FONT_SIZE));
+            cs.showText(truncate(sanitizeForFont(font, text), colWidths[i], font, FONT_SIZE));
             cs.endText();
             x += colWidths[i];
         }

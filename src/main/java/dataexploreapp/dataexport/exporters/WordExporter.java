@@ -1,5 +1,6 @@
 package dataexploreapp.dataexport.exporters;
 
+import dataexploreapp.dataexport.IExporter;
 import org.apache.poi.xwpf.usermodel.*;
 import dataexploreapp.db_config.database.DataTable;
 

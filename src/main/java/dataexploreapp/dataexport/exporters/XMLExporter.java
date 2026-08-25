@@ -1,6 +1,7 @@
 package dataexploreapp.dataexport.exporters;
 
 
+import dataexploreapp.dataexport.IExporter;
 import dataexploreapp.db_config.database.DataTable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

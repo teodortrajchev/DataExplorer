@@ -2,8 +2,8 @@ package dataexploreapp;
 
 import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.db_config.database.DataTable;
-import dataexploreapp.dataexport.exporters.ExportFormat;
-import dataexploreapp.dataexport.exporters.IExporter;
+import dataexploreapp.dataexport.ExportFormat;
+import dataexploreapp.dataexport.IExporter;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,5 +1,6 @@
 package dataexploreapp.dataexport.exporters;
 
+import dataexploreapp.dataexport.IExporter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import dataexploreapp.db_config.database.DataTable;

@@ -1,7 +1,7 @@
 package dataexploreapp.dialogs;
 
 import dataexploreapp.db_config.database.DataTable;
-import dataexploreapp.dataexport.exporters.ExportFormat;
+import dataexploreapp.dataexport.ExportFormat;
 import dataexploreapp.history.ExportHistoryService;
 import dataexploreapp.history.ExportRecord;
 
