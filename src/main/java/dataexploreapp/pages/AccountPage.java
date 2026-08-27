@@ -103,7 +103,11 @@ public class AccountPage {
 
         Label createdAtValue = new Label(created_at);
         createdAtValue.getStyleClass().add("section-label");
-
+        updateButton.setId("updateButton");
+        homeButton.setId("homeButton");
+        logoutBtn.setId("logoutBtn");
+        title.setId("usernameLabel");
+        createdAtValue.setId("createdAtValue");
         VBox createdBox = new VBox(5, createdLabel, createdAtValue);
 
         Separator divider = new Separator();

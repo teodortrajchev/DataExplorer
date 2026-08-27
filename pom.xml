@@ -217,6 +217,12 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/benchmark/**</exclude>
+                        <exclude>**/jmh_generated/**</exclude>
+                    </excludes>
+                </configuration>
                 <version>0.8.13</version>
 
                 <executions>

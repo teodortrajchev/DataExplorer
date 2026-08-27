@@ -50,6 +50,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class DataBrowserPage {
+
+
+
     @FunctionalInterface
     private interface PaginationCall {
         DataTable run() throws Exception;
@@ -91,6 +94,11 @@ public class DataBrowserPage {
             secondValueField.setPromptText("and value");
             secondValueField.setVisible(false);
             secondValueField.setManaged(false);
+
+            columnBox.setId("filterColumn");
+            operatorBox.setId("filterOperator");
+            valueField.setId("filterValue");
+            secondValueField.setId("filterSecondValue");
 
             operatorBox.valueProperty().addListener((obs, old, val) -> {
                 boolean needsSecond = val != null && val.requiresSecondValue();
@@ -193,6 +201,11 @@ public class DataBrowserPage {
 
     public void show(Stage stage) {
         this.stage = stage;
+
+        tableList.setId("tableList");
+        procedureList.setId("procedureList");
+        resultsTable.setId("resultsTable");
+        statusLabel.setId("statusLabel");
 
         // TABLES PANEL
         Label tablesLabel = new Label("Tables");
@@ -555,6 +568,10 @@ public class DataBrowserPage {
         saveChartBtn.setOnAction(e -> saveChartAsImage());
         Button applySortBtn = new Button("Apply sort");
         applySortBtn.setOnAction(e -> applySort());
+
+        sortColumnBox.setId("sortColumnBox");
+        sortDirectionBox.setId("sortDirectionBox");
+        applySortBtn.setId("applySortBtn");
 
         Label filter=new Label("Filter:");
         filter.getStyleClass().add("section-label");
@@ -1226,6 +1243,11 @@ public class DataBrowserPage {
         prevPageBtn.setOnAction(e -> goToPreviousPage());
         nextPageBtn.setOnAction(e -> goToNextPage());
         loadFullTableBtn.setOnAction(e -> loadFullTableAsync());
+
+        pageSizeBox.setId("pageSizeBox");
+        prevPageBtn.setId("prevPageBtn");
+        nextPageBtn.setId("nextPageBtn");
+        paginationLabel.setId("paginationLabel");
 
         HBox bar = new HBox(10,
                 new Label("Rows per page:"), pageSizeBox,
