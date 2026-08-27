@@ -44,6 +44,16 @@ public class ConnectionPage {
 
         HBox navbar = buildNavbar();
 
+        urlField.setId("urlField");
+        dbUserField.setId("dbUserField");
+        dbPasswordField.setId("dbPasswordField");
+        schemaField.setId("schemaField");
+        statusLabel.setId("statusLabel");
+        connectButton.setId("connectButton");
+        saveConnectionCheckBox.setId("saveConnectionCheckBox");
+        defaultConnectionCheckBox.setId("defaultConnectionCheckBox");
+        connectionNameField.setId("connectionNameField");
+
         Label title = new Label("Connect to a database");
         title.getStyleClass().add("welcome-title");
 
@@ -138,6 +148,7 @@ public class ConnectionPage {
             new LoginDialog(new AuthService()).show(new Stage());
             stage.close();
         });
+        logoutBtn.setId("logoutBtn");
 
         navbar.getChildren().addAll(navLabel, spacer,logoutBtn);        return navbar;
     }

@@ -33,12 +33,11 @@ build/
 
 ### VS Code ###
 .vscode/
-
 ### Mac OS ###
 .DS_Store
 
-# Maven build output
-
+#test results from jmh
+results.json
 # IntelliJ project files
 .idea/
 

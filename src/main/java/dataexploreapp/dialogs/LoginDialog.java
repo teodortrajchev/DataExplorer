@@ -31,6 +31,12 @@ public class LoginDialog {
     public void show(Stage stage) {
         this.stage = stage;
 
+        userIdField.setId("userIdField");
+        passwordField.setId("passwordField");
+        messageLabel.setId("messageLabel");
+        loginButton.setId("loginButton");
+        resetButton.setId("resetButton");
+
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(10);
