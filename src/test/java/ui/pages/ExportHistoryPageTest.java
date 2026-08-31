@@ -1,4 +1,4 @@
-package ui;
+package ui.pages;
 
 import dataexploreapp.history.ExportHistoryService;
 import dataexploreapp.history.ExportRecord;

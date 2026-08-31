@@ -47,7 +47,13 @@ public class UpdateConnectionDialog {
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         Label title = new Label("Update your connection details, or connect to a different database entirely.");
         title.getStyleClass().add("welcome-subtitle");
-
+        urlField.setId("urlField");
+        dbUserField.setId("dbUserField");
+        dbPasswordField.setId("dbPasswordField");
+        schemaField.setId("schemaField");
+        statusLabel.setId("statusLabel");
+        connectButton.setId("connectButton");
+        cancelButton.setId("cancelButton");
         // Prefill everything except password — never re-display a stored credential.
         urlField.setText(currentReader.getJdbcUrl());
         dbUserField.setText(currentReader.getUsername());

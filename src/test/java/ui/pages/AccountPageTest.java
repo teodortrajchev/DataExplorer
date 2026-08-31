@@ -1,4 +1,4 @@
-package ui;
+package ui.pages;
 
 import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.db_config.database.DataTable;

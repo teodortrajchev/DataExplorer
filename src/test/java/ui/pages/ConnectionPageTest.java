@@ -1,4 +1,4 @@
-package ui;
+package ui.pages;
 
 import dataexploreapp.pages.ConnectionPage;
 import javafx.scene.control.Button;

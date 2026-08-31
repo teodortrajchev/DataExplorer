@@ -34,6 +34,7 @@ public class RunQueryDialog {
         hint.setStyle("-fx-font-size: 11px; -fx-text-fill: #6b7280;");
 
         TextArea queryArea = new TextArea();
+        queryArea.setId("queryArea");
         queryArea.setPromptText("SELECT or CALL ");
         queryArea.setPrefRowCount(8);
         queryArea.setPrefColumnCount(50);
@@ -41,6 +42,7 @@ public class RunQueryDialog {
         queryArea.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 13px;");
 
         Label errorLabel = new Label();
+        errorLabel.setId("errorLabel");
         errorLabel.setTextFill(Color.RED);
         errorLabel.setWrapText(true);
         errorLabel.setMaxWidth(480);
@@ -48,8 +50,10 @@ public class RunQueryDialog {
         Optional<String>[] result = new Optional[]{Optional.empty()};
 
         Button runBtn = new Button("Run");
+        runBtn.setId("runBtn");
         runBtn.getStyleClass().add("primary-button");
         Button cancelBtn = new Button("Cancel");
+        cancelBtn.setId("cancelBtn");
 
         Runnable attemptRun = () -> {
             String query = queryArea.getText();

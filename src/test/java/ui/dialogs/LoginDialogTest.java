@@ -1,4 +1,4 @@
-package ui;
+package ui.dialogs;
 
 import dataexploreapp.auth.AuthService;
 import dataexploreapp.db_config.save.SavedConnectionService;

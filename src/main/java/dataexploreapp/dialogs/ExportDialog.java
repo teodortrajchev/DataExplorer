@@ -55,16 +55,19 @@ public class ExportDialog {
         Label title = new Label("Export " + dataTable.getRowCount() + " rows");
         title.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
+        statusLabel.getStyleClass().add("status-label");
+        formatBox.setId("formatBox");
+
         formatBox.getItems().addAll(ExportFormat.values());
         formatBox.getSelectionModel().selectFirst();
 
         Button chooseFileBtn = new Button("Choose output file...");
         chooseFileBtn.setOnAction(e -> chooseFile());
-
+        chooseFileBtn.setId("chooseFileButton");
         Button exportBtn = new Button("Export");
         exportBtn.getStyleClass().add("primary-button");
         exportBtn.setOnAction(e -> runExport());
-
+        exportBtn.setId("exportButton");
         VBox root = new VBox(12, title, new Label("Format:"), formatBox, chooseFileBtn, exportBtn, statusLabel);
         root.setPadding(new Insets(20));
         root.setAlignment(Pos.CENTER);
