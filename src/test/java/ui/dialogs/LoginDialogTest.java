@@ -67,7 +67,7 @@ class LoginDialogTest {
         waitUntil(() -> !"Checking...".equals(messageLabel(robot).getText()));
 
         assertEquals("Login Failed", messageLabel(robot).getText());
-        assertFalse(loginButton(robot).isDisable(), "Login button should be re-enabled after the attempt");
+        assertFalse(loginButton(robot).isDisable());
     }
 
     @Test
@@ -126,8 +126,6 @@ class LoginDialogTest {
         robot.clickOn("#userIdField").write("someone");
         robot.clickOn("#passwordField").write("secret");
         robot.clickOn("#resetButton");
-
-        WaitForAsyncUtils.waitForFxEvents();
 
         assertEquals("", userIdField(robot).getText());
         assertEquals("", passwordField(robot).getText());

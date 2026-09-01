@@ -29,6 +29,16 @@ public class AuthServiceTest {
         assertEquals(AuthService.AuthResult.SUCCESS,result);
     }
     @Test
+    void login_nullUsername_test() {
+        assertThrows(IllegalArgumentException.class, () -> authService.authenticate(null, "password"));
+
+    }
+
+    @Test
+    void login_nullPassword_test() {
+        assertThrows(IllegalArgumentException.class, () -> authService.authenticate("alice", null));
+    }
+    @Test
     void login_invalid_password_test() {
         AuthService.AuthResult result = authService.authenticate("admin", "wrong");
 

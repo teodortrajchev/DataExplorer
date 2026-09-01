@@ -81,10 +81,10 @@ class UpdateConnectionDialogTest {
         when(currentReader.getUsername()).thenReturn("olduser");
 
         openDialog(robot, currentReader, "OLDSCHEMA");
-        assertTrue(updateConnectionDialogShowing());
+        assertTrue(DialogShowing());
 
         robot.clickOn("#cancelButton");
-        assertFalse(updateConnectionDialogShowing());
+        assertFalse(DialogShowing());
     }
 
     @Test
@@ -112,17 +112,16 @@ class UpdateConnectionDialogTest {
 
     private void openDialog(FxRobot robot, DataBaseReader currentReader, String schema) {
         Platform.runLater(() -> new UpdateConnectionDialog(username, currentReader, schema).show(ownerStage));
-        waitUntil(robot, 5, this::updateConnectionDialogShowing);
+        waitUntil(robot, 5, this::DialogShowing);
     }
 
     private void closeDialog(FxRobot robot) {
-        if (updateConnectionDialogShowing()) {
+        if (DialogShowing()) {
             robot.clickOn("#cancelButton");
-            WaitForAsyncUtils.waitForFxEvents();
         }
     }
 
-    private boolean updateConnectionDialogShowing() {
+    private boolean DialogShowing() {
         return Window.getWindows().stream().anyMatch(w -> w instanceof Stage s && s.isShowing() && "Update Connection".equals(s.getTitle()));
     }
 

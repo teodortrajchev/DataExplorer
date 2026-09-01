@@ -31,7 +31,6 @@ class RunQueryDialogTest {
         stage.show();
 
         Platform.runLater(() -> RunQueryDialog.show(stage));
-        WaitForAsyncUtils.waitForFxEvents();
     }
 
 
@@ -42,9 +41,9 @@ class RunQueryDialogTest {
         robot.write("SELECT * FROM EMPLOYEES");
         robot.clickOn("#runBtn");
 
-        waitUntil(robot, () -> !runQueryDialogShowing());
+        waitUntil(robot, () -> !DialogShowing());
 
-        assertFalse(runQueryDialogShowing());
+        assertFalse(DialogShowing());
     }
 
     @Test
@@ -56,7 +55,7 @@ class RunQueryDialogTest {
         waitUntil(robot, () -> !errorLabel(robot).getText().isEmpty());
 
         assertEquals("Only SELECT statements and stored procedure calls are allowed.", errorLabel(robot).getText());
-        assertTrue(runQueryDialogShowing());
+        assertTrue(DialogShowing());
     }
 
     @Test
@@ -65,7 +64,7 @@ class RunQueryDialogTest {
         waitUntil(robot, () -> !errorLabel(robot).getText().isEmpty());
 
         assertEquals("SQL query cannot be empty.", errorLabel(robot).getText());
-        assertTrue(runQueryDialogShowing());
+        assertTrue(DialogShowing());
     }
 
 
@@ -73,11 +72,11 @@ class RunQueryDialogTest {
     @Test
     void cancel_test(FxRobot robot) {
         robot.clickOn("#cancelBtn");
-        waitUntil(robot, () -> !runQueryDialogShowing());
-        assertFalse(runQueryDialogShowing());
+        waitUntil(robot, () -> !DialogShowing());
+        assertFalse(DialogShowing());
     }
 //helpers
-    private boolean runQueryDialogShowing() {
+    private boolean DialogShowing() {
         return Window.getWindows().stream().anyMatch(w -> w instanceof Stage s && s.isShowing() && "Run query".equals(s.getTitle()));
     }
 

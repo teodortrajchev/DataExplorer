@@ -69,18 +69,18 @@ class ProceduresParamsDialogTest {
     @Test
     void run_closesDialog_test(FxRobot robot) {
         robot.clickOn("Run");
-        waitUntil(robot, () -> !dialogShowing());
-        assertFalse(dialogShowing());
+        waitUntil(robot, () -> !DialogShowing());
+        assertFalse(DialogShowing());
     }
 
     @Test
     void cancel_closesDialog_test(FxRobot robot) {
         robot.clickOn("Cancel");
-        waitUntil(robot, () -> !dialogShowing());
-        assertFalse(dialogShowing());
+        waitUntil(robot, () -> !DialogShowing());
+        assertFalse(DialogShowing());
     }
 
-    private boolean dialogShowing() {
+    private boolean DialogShowing() {
         return Window.getWindows().stream().anyMatch(w -> w instanceof Stage s && s.isShowing() && "CREATE_EMPLOYEE — parameters".equals(s.getTitle()));
     }
 

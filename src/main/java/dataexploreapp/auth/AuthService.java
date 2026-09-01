@@ -24,7 +24,9 @@ public class AuthService {
 
     public AuthResult authenticate(String username, String plainPassword) {
         String sql = "SELECT password_hash FROM SRB.app_users WHERE username = ?";
-
+        if (username==null||plainPassword==null) {
+            throw new IllegalArgumentException("username or password is null");
+        }
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
