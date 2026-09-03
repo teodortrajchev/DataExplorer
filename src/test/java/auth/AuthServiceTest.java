@@ -1,8 +1,10 @@
 package auth;
 
+import com.zaxxer.hikari.HikariDataSource;
 import dataexploreapp.auth.AuthService;
 import dataexploreapp.dataexport.DataExportService;
 import dataexploreapp.dataexport.exporters.CSVExporter;
+import dataexploreapp.db_config.database.DataBaseReader;
 import dataexploreapp.db_config.database.DataTable;
 import dataexploreapp.db_config.validation.SQLValidator;
 import dataexploreapp.encryption.PasswordEncryptionService;
@@ -10,18 +12,27 @@ import org.apache.xmlbeans.impl.xb.ltgfmt.TestCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 public class AuthServiceTest {
     private AuthService authService=new AuthService();
+    @Mock
+    private  HikariDataSource dataSource;
     @Test
     void login_valid_test() {
 
@@ -49,7 +60,20 @@ public class AuthServiceTest {
         AuthService.AuthResult result = authService.authenticate("admin2", "admin");
         assertEquals(AuthService.AuthResult.USER_NOT_FOUND,result);
     }
+    //T8
+    @Test
+    void login_dbError_test() throws SQLException {
+        SQLException simulatedFailure = new SQLException();
+        try (MockedStatic<DriverManager> mockedDriverManager = Mockito.mockStatic(DriverManager.class)) {
+            mockedDriverManager
+                    .when(() -> DriverManager.getConnection(anyString(), anyString(), anyString()))
+                    .thenThrow(simulatedFailure);
 
+            AuthService.AuthResult result = authService.authenticate("admin", "admin");
+
+            assertEquals(AuthService.AuthResult.DB_ERROR, result);
+        }
+    }
 //    PasswordEncryptionService
     @Test
     void encrypt_decrypt_test() {
